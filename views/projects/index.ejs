@@ -1,0 +1,138 @@
+<% include ../partials/header %>
+</head>
+
+<body>
+    <% include ../partials/navbar %>
+    <div class="px-5" style="margin-top: 80px">
+        <h1>Projects</h1>
+        <hr />
+        <!-- TAMPILAN FILTERS  -->
+        <h2>Filters</h2>
+        <form action="" method="GET" class="mx-5">
+            <input type="hidden" name="page" value="1">
+            <div class="form-group row">
+                <label for="inputEmail3" class="col-sm-2 col-form-label">
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input" name="isID" value="on" />
+                        <label class="form-check-label" for="defaultCheck1">
+                            ID
+                        </label>
+                    </div>
+                </label>
+                <div class="col-sm-10">
+                    <input type="text" class="form-control pr-5" placeholder="ID" name="valueID">
+                </div>
+            </div>
+
+            <div class="form-group row">
+                <label for="inputEmail3" class="col-sm-2 col-form-label">
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input" name="isName" value="on" />
+                        <label class="form-check-label" for="defaultCheck1">
+                            Name
+                        </label>
+                    </div>
+                </label>
+                <div class="col-sm-10">
+                    <input type="text" class="form-control" placeholder="" name="valueName">
+                </div>
+            </div>
+
+            <div class="form-group row">
+                <label for="inputEmail3" class="col-sm-2 col-form-label">
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input" name="isMember" value="on" />
+                        <label class="form-check-label" for="defaultCheck1">
+                            Member
+                        </label>
+                    </div>
+                </label>
+                <div class="col-sm-10">
+                    <select class="form-control" name="valueMember" id="member">
+                        <option selected disabled>Pilih Member</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group row">
+                <div class="col-sm-10">
+                    <button type="submit" name="button" class="btn btn-primary">Search</a>
+                </div>
+            </div>
+        </form>
+
+        <!-- TAMPILAN OPTIONS -->
+        <h2>Options</h2>
+        <form action="#" method="POST" class="mx-5">
+            <div class="form-group row">
+                <div class="col-sm-2">Columns</div>
+                <div class="col-sm-10">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="gridCheck1">
+                        <label class="form-check-label" for="gridCheck1">
+                            ID
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="gridCheck1">
+                        <label class="form-check-label" for="gridCheck1">
+                            Name
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="gridCheck1">
+                        <label class="form-check-label" for="gridCheck1">
+                            Members
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group row">
+                <div class="col-sm-10">
+                    <button type="submit" class="btn btn-primary">Apply</button>
+                </div>
+            </div>
+        </form>
+
+        <!-- TAMPILAN TABEL -->
+        <table border="0" class="table table-striped" style="margin-top: 50px;">
+            <thead>
+                <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">Name</th>
+                    <th scope="col">Members</th>
+                    <th scope="col">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>1</td>
+                    <td>Adnan Fanspage</td>
+                    <td>Isyana, Raisa, Camila</td>
+                    <td>
+                        <a role="button" class="btn btn-success mr-1" href="projects/edit/1">Edit</button>
+                            <a role="button" class="btn btn-danger" href="projects/delete/1">Delete</button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!--PAGINATION-->
+        <nav aria-label="...">
+            <ul class="pagination">
+                <li class="page-item disabled">
+                    <a class="page-link" href="#" tabindex="-1" aria-disabled="true">Previous</a>
+                </li>
+                <li class="page-item"><a class="page-link" href="#">1</a></li>
+                <li class="page-item active" aria-current="page">
+                    <a class="page-link" href="#">2 <span class="sr-only">(current)</span></a>
+                </li>
+                <li class="page-item"><a class="page-link" href="#">3</a></li>
+                <li class="page-item">
+                    <a class="page-link" href="#">Next</a>
+                </li>
+            </ul>
+        </nav>
+
+        <a role="button" href="add" class="btn btn-primary">Add</a>
+    </div>
+    <% include ../partials/footer %>
