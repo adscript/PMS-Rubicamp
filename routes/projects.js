@@ -24,7 +24,17 @@ var router = express.Router();
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
-  res.render('projects');
+  res.render('projects',
+    {formOptions : ['ID', 'Name', 'Members']}
+  );
+});
+
+router.get('/overview', (req, res, next) => {
+    res.render('projects/overview');
+});
+
+router.get('/add', (req, res, next) => {
+    res.render('projects/add');
 });
 
 module.exports = router;
