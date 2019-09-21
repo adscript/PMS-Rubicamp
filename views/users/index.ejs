@@ -4,55 +4,65 @@
 <body>
     <% include ../partials/navbar %>
     <div class="px-5" style="margin-top: 80px">
-        <h1>Projects</h1>
+        <h1>Users</h1>
         <hr />
         <!-- TAMPILAN FILTERS  -->
         <h2>Filters</h2>
         <form action="" method="GET" style="margin: 20px 180px">
             <input type="hidden" name="page" value="1">
+            <%_ formFilter.forEach((data, index) => { -%>
             <div class="form-group row">
-                <label for="inputEmail3" class="col-sm-2 col-form-label">
+                <label class="col-sm-2 col-form-label">
                     <div class="form-check">
-                        <input type="checkbox" class="form-check-input" name="isID" value="on" />
-                        <label class="form-check-label" for="defaultCheck1">
-                            ID
+                        <input type="checkbox" class="form-check-input" name="checkbox" value="<%=data%>" />
+                        <label class="form-check-label">
+                            <%= data %>
                         </label>
                     </div>
                 </label>
                 <div class="col-sm-10">
-                    <input type="text" class="form-control pr-5 mdl-textfield--floating-label" placeholder="ID" name="valueID">
+                    <input type="<%=formTypes[index]%>" class="form-control pr-5" placeholder="<%=data%>" name="<%=data%>">
                 </div>
             </div>
+        <%_ }) -%>
 
             <div class="form-group row">
                 <label for="inputEmail3" class="col-sm-2 col-form-label">
                     <div class="form-check">
-                        <input type="checkbox" class="form-check-input" name="isName" value="on" />
+                        <input type="checkbox" class="form-check-input" name="isType" value="on" />
                         <label class="form-check-label" for="defaultCheck1">
-                            Name
+                            Type
                         </label>
                     </div>
                 </label>
                 <div class="col-sm-10">
-                    <input type="text" class="form-control" placeholder="" name="valueName">
-                </div>
-            </div>
-
-            <div class="form-group row">
-                <label for="inputEmail3" class="col-sm-2 col-form-label">
-                    <div class="form-check">
-                        <input type="checkbox" class="form-check-input" name="isMember" value="on" />
-                        <label class="form-check-label" for="defaultCheck1">
-                            Member
-                        </label>
-                    </div>
-                </label>
-                <div class="col-sm-10">
-                    <select class="form-control" name="valueMember" id="member">
-                        <option selected disabled>Pilih Member</option>
+                    <select class="form-control" name="valueType">
+                        <option selected disabled>Choose Type</option>
+                        <option>Fulltime</option>
+                        <option>Parttime</option>
                     </select>
                 </div>
             </div>
+
+            <div class="form-group row">
+                <label for="inputEmail3" class="col-sm-2 col-form-label">
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input" name="isRole" value="on" />
+                        <label class="form-check-label" for="defaultCheck1">
+                            Role
+                        </label>
+                    </div>
+                </label>
+                <div class="col-sm-10">
+                    <select class="form-control" name="valueRole">
+                        <option selected disabled>Choose Role</option>
+                        <option>Programmer</option>
+                        <option>Manager</option>
+                        <option>Quality Assurance</option>
+                    </select>
+                </div>
+            </div>
+
             <div class="form-group row">
                 <div class="col-sm-10">
                     <button type="submit" name="button" class="btn btn-primary">Search</a>
@@ -62,20 +72,21 @@
 
         <!-- TAMPILAN OPTIONS -->
         <h2>Options</h2>
-        <form action="#" method="POST" class="mx-5">
+        <form action="#" method="POST" style="margin: 30px 180px">
             <div class="form-group row">
                 <div class="col-sm-2">Columns</div>
                 <div class="col-sm-10">
-                    <%_ formOptions.forEach((data) => {-%>
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" name="checkopt" value="<%= data %>">
-                            <label class="form-check-label">
-                                <%= data %>
-                            </label>
-                        </div>
-                    <%_ }) -%>
+                    <%_ formOptions.forEach((data) => { -%>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="checkopt" value="<%=data%>">
+                        <label class="form-check-label">
+                            <%=data%>
+                        </label>
                     </div>
+                    <%_ }) -%>
+                </div>
             </div>
+
             <div class="form-group row">
                 <div class="col-sm-10">
                     <button type="submit" class="btn btn-primary">Apply</button>

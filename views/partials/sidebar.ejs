@@ -1,18 +1,45 @@
-<div class="row">
-    <div class="col-3 bg-dark">
-      <div class="nav flex-column nav-pills" id="v-pills-tab" role="tablist" aria-orientation="vertical">
-        <a class="nav-link active" href="#v-pills-home"  aria-selected="true">Overview</a>
-        <a class="nav-link" href="#v-pills-profile"  aria-selected="false">Profile</a>
-        <a class="nav-link" href="#v-pills-messages"  aria-selected="false">Messages</a>
-        <a class="nav-link" href="#v-pills-settings"  aria-selected="false">Settings</a>
-     </div>
-    </div>
-    <div class="col-9">
-      <div class="tab-content" id="v-pills-tabContent">
-        <div class="tab-pane fade show active" id="v-pills-home" role="tabpanel" aria-labelledby="v-pills-home-tab">...</div>
-        <div class="tab-pane fade" id="v-pills-profile" role="tabpanel" aria-labelledby="v-pills-profile-tab">...</div>
-        <div class="tab-pane fade" id="v-pills-messages" role="tabpanel" aria-labelledby="v-pills-messages-tab">...</div>
-        <div class="tab-pane fade" id="v-pills-settings" role="tabpanel" aria-labelledby="v-pills-settings-tab">...</div>
-      </div>
-    </div>
-</div>
+<div class="sidebar">
+    <nav class="sidebar-nav">
+      <ul class="nav">
+        <li class="nav-item">
+          <a class="nav-link" href="#">
+            <i class="nav-icon cui-speedometer"></i> Nav item
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#">
+            <i class="nav-icon cui-speedometer"></i> With badge
+            <span class="badge badge-primary">NEW</span>
+          </a>
+        </li>
+        <li class="nav-item nav-dropdown">
+          <a class="nav-link nav-dropdown-toggle" href="#">
+            <i class="nav-icon cui-puzzle"></i> Nav dropdown
+          </a>
+          <ul class="nav-dropdown-items">
+            <li class="nav-item">
+              <a class="nav-link" href="#">
+                <i class="nav-icon cui-puzzle"></i> Nav dropdown item
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#">
+                <i class="nav-icon cui-puzzle"></i> Nav dropdown item
+              </a>
+            </li>
+          </ul>
+        </li>
+        <li class="nav-item mt-auto">
+          <a class="nav-link nav-link-success" href="https://coreui.io">
+            <i class="nav-icon cui-cloud-download"></i> Download CoreUI</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link nav-link-danger" href="https://coreui.io/pro/">
+            <i class="nav-icon cui-layers"></i> Try CoreUI
+            <strong>PRO</strong>
+          </a>
+        </li>
+      </ul>
+    </nav>
+    <button class="sidebar-minimizer brand-minimizer" type="button"></button>
+  </div>
