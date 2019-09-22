@@ -1,0 +1,51 @@
+<h2>Filters</h2>
+<form action="" method="GET" style="margin: 20px 180px">
+    <input type="hidden" name="page" value="1">
+
+    <!-- Struktur dari filter
+                formFilter = {
+                    name : " ";
+                    type : " ";
+                    select : [option1, option2, option3]; untuk selection type
+                    select : undefined; untuk type lainnya
+                    value : query.name;
+                }
+                filterQuery = {
+                    checkBox : req.query.checkBox;
+                }
+            -->
+    <%_ formFilter.forEach((filter) => {-%>
+    <div class="form-group row">
+        <label for="filter" class="col-sm-2 col-form-label">
+            <div class="form-check">
+                <input type="checkbox" class="form-check-input" name="checkBox" value="<%= filter.name %>"
+                    <%= filterQuery.includes(filter.name) && filter.value ? "checked" : "" %> />
+                <label class="form-check-label" for="defaultCheck1">
+                    <%= filter.name %>
+                </label>
+            </div>
+        </label>
+        <div class="col-sm-10">
+            <%_ if(filter.select){ -%>
+            <select class="form-control" name="<%= filter.name %>" id="">
+                <option selected disabled> Pilih Member </option>
+                <%_filter.select.forEach((option) => { -%>
+                <option <%= filterQuery.includes(filter.name) && filter.value == option ? "selected" : "" %>>
+                    <%= option %></option>
+                <%_ }) -%>
+            </select>
+            <%_ } else { -%>
+            <input type="<%= filter.type %> " class="form-control pr-5 mdl-textfield--floating-label"
+                placeholder="<%= filter.name %>" name="<%= filter.name %>"
+                value="<%= filterQuery.includes(filter.name) && filter.value ? filter.value : filter.value = '' %>">
+            <%_ } -%>
+        </div>
+    </div>
+    <%_ }); -%>
+
+    <div class="form-group row">
+        <div class="col-sm-10">
+            <button type="submit" name="button" class="btn btn-primary">Search</a>
+        </div>
+    </div>
+</form>
