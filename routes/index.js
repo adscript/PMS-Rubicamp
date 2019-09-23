@@ -24,6 +24,7 @@ router.post('/validate', (req, res, next) => {
       req.session.user = userData;
       res.redirect('/projects');
     } else {
+      // Sending flash alert if failed
       req.flash('info', 'Wrong email or password');
       res.redirect('/');
     }
