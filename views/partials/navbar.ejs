@@ -2,16 +2,17 @@
     <div class="collapse navbar-collapse" id="navbarTogglerDemo01">
         <a class="navbar-brand" href="#">Project Management System</a>
         <ul class="navbar-nav mr-auto mt-2 mt-lg-0">
-            <li class="nav-item active">
-                <a class="nav-link" href="#">Projects</a>
-                <!-- <span class="sr-only">(current)</span> -->
+            <li class="nav-item <%= currentURL == 'project' ? 'active' : '' %> ">
+                <a class="nav-link" href="/project">Projects</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="#">Profile</a>
+                <a class="nav-link <%= currentURL == 'profile' ? 'active' : '' %>" href="/profile">Profile</a>
             </li>
+            <%_ if(loggedInUser.isadmin){ -%>
             <li class="nav-item">
-                <a class="nav-link" href="#">Users</a>
+                <a class="nav-link <%= currentURL == 'users' ? 'active' : '' %>" href="/users">Users</a>
             </li>
+            <%_ } -%>
         </ul>
         <a class="btn btn-outline-success my-2 my-sm-0" role="buttom" href="/logout">Sign Out</a>
     </div>
