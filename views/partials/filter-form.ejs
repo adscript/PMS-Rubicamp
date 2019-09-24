@@ -14,6 +14,7 @@
                     checkBox : req.query.checkBox;
                 }
             -->
+
     <%_ formFilter.forEach((filter) => {-%>
     <div class="form-group row">
         <label for="filter" class="col-sm-2 col-form-label">
@@ -30,8 +31,8 @@
             <select class="form-control" name="<%= filter.name %>" id="">
                 <option selected disabled> Pilih Member </option>
                 <%_filter.select.forEach((option) => { -%>
-                <option <%= filterQuery.includes(filter.name) && filter.value == option ? "selected" : "" %>>
-                    <%= option %></option>
+                <option value="<%= option.userid %>" <%= filterQuery.includes(filter.name) && filter.value == option.userid ? "selected" : "" %>>
+                    <%= option.fullname %></option>
                 <%_ }) -%>
             </select>
             <%_ } else { -%>
