@@ -33,7 +33,7 @@ router.get('/', isLoggedIn, function (req, res, next) {
                     { name: "Member", type: "select", select: ["opt1", "opt2", "opt3"], value: req.query.Member, dbquery: `projectid IN (SELECT projectid FROM members WHERE userid = $)` }];                 
                     
   let currentPage = Number(req.query.page) || 1;                    
-  let limit = 3;
+  let limit = 2;
   let offset = (currentPage - 1) * limit;
   let query = req.query;
   let loggedInUser = req.session.user;
@@ -45,14 +45,14 @@ router.get('/', isLoggedIn, function (req, res, next) {
   
   Promise.all([memberList, projectMemberList, totalProject]).then(results => {
     const [members, projects, totalProject] = results.map(element => element.rows);
-    const totalPage = Math.ceil(totalProject / limit);
+    const totalPage = Math.ceil(totalProject[0].count / limit);
     formFilter[2].select = members;
-    console.log(projects[0].projectid);
     res.render('projects',
     {
       formOptions: ['ID', 'Name', 'Members'],
       filterQuery, formFilter, loggedInUser, query, currentPage, projects, totalPage,
       currentURL: "project",
+      url : req.url
     }
   );
   }).catch(err => console.log(err));
