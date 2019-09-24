@@ -39,20 +39,18 @@
 
         <!--PAGINATION-->
         <nav aria-label="...">
-            <ul class="pagination">
-                <li class="page-item disabled">
-                    <a class="page-link" href="#" tabindex="-1" aria-disabled="true">Previous</a>
-                </li>
-                <li class="page-item"><a class="page-link" href="#">1</a></li>
-                <li class="page-item active" aria-current="page">
-                    <a class="page-link" href="#">2 <span class="sr-only">(current)</span></a>
-                </li>
-                <li class="page-item"><a class="page-link" href="#">3</a></li>
-                <li class="page-item">
-                    <a class="page-link" href="#">Next</a>
-                </li>
-            </ul>
-        </nav>
+                <ul class="pagination">
+                  <li class="page-item <%= (currentPage == 1) ? 'disabled' : '' %>">
+                    <a class="page-link" href="<%= url.includes('?') ? `/projects${url.replace('/?page=' + currentPage,'?page=' + Number(currentPage-1))}` : '/projects?page=' + Number(currentPage-1) %>">Previous</a>
+                  </li>
+                  <% for(let i = (currentPage == 1) ? currentPage : currentPage - 1; i <= totalPage && i <= currentPage + 5; i++){ %>
+                  <li class="page-item <%= (i == currentPage) ? 'active' : '' %>"><a class="page-link" href="<%= url.includes('?') ? `/projects${url.replace('/?page=' + currentPage,'?page=' + i)}` : '/projects?page=' + i %>"><%= i %></a></li>
+                  <% } %>
+                  <li class="page-item <%= (currentPage == totalPage) ? 'disabled' : '' %> ">
+                    <a class="page-link" href="<%= url.includes('?') ? `/projects${url.replace('/?page=' + currentPage,'?page=' + Number(currentPage+1))}` : '/projects?page=' + Number(currentPage+1) %>">Next</a>
+                  </li>
+                </ul>
+              </nav>
 
         <a role="button" href="add" class="btn btn-primary">Add</a>
     </div>
