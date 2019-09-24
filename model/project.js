@@ -51,7 +51,6 @@ module.exports = class Project {
     }
 
     startQuery(){
-        console.log(this.sql);
         return this.pool.query(this.sql, this.filterValue);
     }
 
