@@ -42,7 +42,6 @@ module.exports = class Project {
             this.sql += " WHERE " + this.activeFilter.join(" AND ");
         }
         return this;
-        
     }
 
     getClosingQuery(offset){
@@ -50,26 +49,24 @@ module.exports = class Project {
         return this;
     }
 
-    startQuery(){
-        return this.pool.query(this.sql, this.filterValue);
+    startQuery(arrConstraint = []){
+        return this.pool.query(this.sql, arrConstraint);
     }
 
     getNumofPage(){
         let sqlCountPage = `SELECT COUNT(DISTINCT projectid) ${this.joinQuery}`;
         this.sql = sqlCountPage;
-        return this.getConstraintQuery().startQuery();
+        return this.getConstraintQuery().startQuery(this.filterValue);
     }
 
     getProjectMemberList(offset){
         let sqlProjectList = `SELECT projects.projectid, projects.name, STRING_AGG(CONCAT(firstname, ' ', lastname), ', ') as fullname ${this.joinQuery}`;
         this.sql = sqlProjectList;
-        return this.getConstraintQuery().getClosingQuery(offset).startQuery();
+        return this.getConstraintQuery().getClosingQuery(offset).startQuery(this.filterValue);
     }
 
+    static updateOptions(pool, options = []){
+        let sqlUpdateOptions = `UPDATE users SET projectopt = $1 WHERE userid = $2`;
+        return pool.query(sqlUpdateOptions,options);
+    }
 }
-
-// const konci = Project.getAllMember();
-// const halaman = Project.getNumofPage();
-// Promise.all([konci, halaman]).then(results => {
-
-// })
