@@ -1,8 +1,8 @@
 module.exports = class Project {
     
-    constructor(pool, filter = [], activeQuery = [], limit = 3){
+    constructor(pool, formFilter = [], activeQuery = [], limit = 3){
         this.pool = pool;
-        this.filter = filter; 
+        this.formFilter = formFilter; 
         this.activeQuery = activeQuery;
         this.joinQuery = `FROM members INNER JOIN projects USING (projectid) INNER JOIN users USING (userid)`;
         this.limit = limit;
@@ -22,10 +22,10 @@ module.exports = class Project {
         if(!user.isadmin){
             filterValue = [user.userid, user.userid];
             activeFilter = [userFilter.replace('WHERE', `WHERE ${subQuery.replace('$',`$${count++}`)}`), subQuery.replace('$',`$${count++}`)];
-        } else if(this.filter[2].value && this.activeQuery.includes(this.activeQuery.name)){
-            this.filter[2].dbquery.replace('projectid IN (SELECT projectid FROM members WHERE userid = $)',userFilter.replace('WHERE', `WHERE ${subQuery.replace('$',`$${count++}`)}`))
+        } else if(this.formFilter[2].value && this.activeQuery.includes(this.activeQuery.name)){
+            this.formFilter[2].dbquery.replace('projectid IN (SELECT projectid FROM members WHERE userid = $)',userFilter.replace('WHERE', `WHERE ${subQuery.replace('$',`$${count++}`)}`))
         }
-        for(let item of this.filter){
+        for(let item of this.formFilter){
             if(item.value && this.activeQuery.includes(item.name)){
                 activeFilter.push(item.dbquery.replace('$',`$${activeFilter.length + 1}`));
                 filterValue.push(item.value);
