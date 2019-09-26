@@ -7,9 +7,10 @@ const Project = require('../model/project');
 // GET /projects/
 router.get('/', isLoggedIn, function (req, res, next) {
   let filterQuery = req.query.checkBox || [];
+
   let formFilter = [{ name: "ID", type: "number", value: req.query.ID, dbquery: "projects.projectid = $" },
   { name: "Name", type: "text", value: req.query.Name, dbquery: "POSITION( $ IN projects.name ) > 0" },
-  { name: "Member", type: "select", select: ["opt1", "opt2", "opt3"], value: req.query.Member, dbquery: `projectid IN (SELECT projectid FROM members WHERE userid = $)` }];
+  { name: "Member", type: "select", select: ["opt1", "opt2", "opt3"], value: req.query.Member, dbquery: `projectid IN (SELECT projectid FROM members WHERE userid = $)` , selectitem : ['userid','fullname']}];
 
   let currentPage = Number(req.query.page) || 1;
   let limit = 2;
@@ -31,6 +32,7 @@ router.get('/', isLoggedIn, function (req, res, next) {
         formOptions: ['ID', 'Name', 'Members'],
         filterQuery, formFilter, loggedInUser, query, currentPage, projects, totalPage,
         currentURL: "projects",
+        optTable: "projectopt",
         url: req.url
       }
     );
@@ -55,7 +57,6 @@ router.post('/', (req, res) => {
       req.session.user.projectopt = JSON.parse(options[0]);
       res.redirect('projects');
   }).catch(err => console.log(err));
-
 })
 
 // GET /projects/add
