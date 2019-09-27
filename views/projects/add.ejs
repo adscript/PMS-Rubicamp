@@ -4,43 +4,41 @@
 <body>
     <% include ../partials/navbar %>
     <div class="px-5" style="margin-top: 80px">
+        <%_ if(messages){ -%>
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <%= messages %>
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <%_ } -%>
         <h1>Add Projects</h1>
         <hr />
         <form action="" method="POST" style="margin: 30px 190px">
             <div class="form-group row">
                 <label class="col-sm-2 col-form-label">Name</label>
                 <div class="col-sm-10">
-                    <input type="text" class="form-control" placeholder="Project Name">
+                    <input type="text" class="form-control" placeholder="Project Name" name="projectName">
                 </div>
             </div>
 
             <div class="form-group row">
-                <div class="col-sm-2">Checkbox</div>
+                <div class="col-sm-2">Members</div>
                 <div class="col-sm-10">
+                    <%_ Members.forEach((Member) => { -%>
                     <div class="form-check">
-                        <input class="form-check-input" type="checkbox" id="gridCheck1">
+                        <input class="form-check-input" type="checkbox" name="checkBox" value="<%= Member.userid %>">
                         <label class="form-check-label" for="gridCheck1">
-                            Example checkbox
+                            <%= Member.fullname %>
                         </label>
                     </div>
-                    <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="gridCheck1">
-                            <label class="form-check-label" for="gridCheck1">
-                                Example checkbox
-                            </label>
-                        </div>
-                        <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="gridCheck1">
-                                <label class="form-check-label" for="gridCheck1">
-                                    Example checkbox
-                                </label>
-                            </div>
+                    <%_ }); -%>
                 </div>
             </div>
             
             <div class="form-group row">
                 <div class="col-sm-10">
-                    <button type="submit" class="btn btn-primary">Sign in</button>
+                    <button type="submit" class="btn btn-primary">Add Project</button>
                 </div>
             </div>
         </form>
