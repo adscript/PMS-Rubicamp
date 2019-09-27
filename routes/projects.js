@@ -2,10 +2,11 @@ var express = require('express');
 var router = express.Router();
 const pool = require('../util/connect');
 const isLoggedIn = require('../middleware/auth').isLoggedin;
+const isAdmin = require('../middleware/auth').isAdmin;
 const Project = require('../model/project');
 
-// GET /projects/
-router.get('/', isLoggedIn, function (req, res, next) {
+// ==================================== LOAD PROJECT PAGE ===============================================================================
+router.get('/', isLoggedIn, function (req, res) {
   let filterQuery = req.query.checkBox || [];
 
   let formFilter = [{ name: "ID", type: "number", value: req.query.ID, dbquery: "projects.projectid = $" },
@@ -19,7 +20,7 @@ router.get('/', isLoggedIn, function (req, res, next) {
   let loggedInUser = req.session.user;
 
   let projectModel = new Project(pool, formFilter, filterQuery, limit);
-  const memberList = projectModel.getAllMember();
+  const memberList = Project.getAllMember(pool);
   const totalProject = projectModel.getAllConstraint(loggedInUser).getNumofPage();
   const projectMemberList = projectModel.getProjectMemberList(offset);
 
@@ -39,7 +40,7 @@ router.get('/', isLoggedIn, function (req, res, next) {
   }).catch(err => console.log(err));
 });
 
-//POST /projects/ for apply options
+// ========================================== APPLY OPTIONS ======================================================
 router.post('/', (req, res) => {
   let [checkedID, checkedName, checkedMembers] = [false, false, false];
   if (req.body.checkopt){
@@ -59,13 +60,45 @@ router.post('/', (req, res) => {
   }).catch(err => console.log(err));
 })
 
-// GET /projects/add
-// POST /projects/add
+// ============================== LOAD ADD PROJECT ==================================
+router.get('/add', isLoggedIn, isAdmin, (req, res) => {
+  Project.getAllMember(pool).then((memberList) => {
+    res.render('projects/add', {
+      loggedInUser: req.session.user,
+      currentURL: 'projects',
+      Members : memberList.rows,
+      messages : req.flash('gagal')[0]
+    });
+  }).catch(err => console.log(err));
+});
+
+// =============================== POST ADD PROJECT ===================================
+router.post('/add', (req, res) => {
+  let message = [];
+    
+    (req.body.projectName) ? "" : message.push('Name');
+    (req.body.checkBox) ? "" : message.push('Members');
+    if(message.length > 0){
+      req.flash('gagal', `${message.join(' and ')} can't be empty`);
+      res.redirect('/projects/add');
+    }else{
+      let usersid = (req.body.checkBox.length == 1) ? [req.body.checkBox] : req.body.checkBox;
+      Project.addProject(pool, req.body.projectName).then(()=>{
+        Project.addMember(pool, usersid, req.body.projectName).then((message)=>{
+          req.flash('berhasil',message);
+          res.redirect('/projects')
+        }).catch(err => console.log(err));
+      }).catch(err => console.log(err));
+    }
+});
 
 // GET /projects/edit/:projectid
 // POST /projects/edit/:projectid
 
-// GET /projects/delete/:projectid
+// ================================= DELETE PROJECT ====================================
+
+
+
 
 // GET /projects/overview/:projectid
 
@@ -80,10 +113,6 @@ router.post('/', (req, res) => {
 
 router.get('/overview', (req, res, next) => {
   res.render('projects/overview');
-});
-
-router.get('/add', (req, res, next) => {
-  res.render('projects/add');
 });
 
 module.exports = router;
