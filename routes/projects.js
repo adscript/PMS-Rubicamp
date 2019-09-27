@@ -14,7 +14,7 @@ router.get('/', isLoggedIn, function (req, res) {
   { name: "Member", type: "select", select: ["opt1", "opt2", "opt3"], value: req.query.Member, dbquery: `projectid IN (SELECT projectid FROM members WHERE userid = $)` , selectitem : ['userid','fullname']}];
 
   let currentPage = Number(req.query.page) || 1;
-  let limit = 2;
+  let limit = 3;
   let offset = (currentPage - 1) * limit;
   let query = req.query;
   let loggedInUser = req.session.user;
@@ -82,11 +82,15 @@ router.post('/add', (req, res) => {
       req.flash('gagal', `${message.join(' and ')} can't be empty`);
       res.redirect('/projects/add');
     }else{
+      let countPage = new Project(pool);
       let usersid = (req.body.checkBox.length == 1) ? [req.body.checkBox] : req.body.checkBox;
       Project.addProject(pool, req.body.projectName).then(()=>{
         Project.addMember(pool, usersid, req.body.projectName).then((message)=>{
           req.flash('berhasil',message);
-          res.redirect('/projects')
+          countPage.getNumofPage().then((count)=> {
+          let limit = 3;
+          res.redirect(`/projects?page=${Math.ceil(count.rows[0].count/limit)}`);
+         }).catch(err => console.log(err));
         }).catch(err => console.log(err));
       }).catch(err => console.log(err));
     }
