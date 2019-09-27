@@ -28,11 +28,10 @@
         </label>
         <div class="col-sm-10">
             <%_ if(filter.select){ -%>
-            <select class="form-control" name="<%= filter.name %>" id="">
-                <option selected disabled> Pilih Member </option>
-                <%_filter.select.forEach((option) => { -%>
-                <option value="<%= option.userid %>" <%= filterQuery.includes(filter.name) && filter.value == option.userid ? "selected" : "" %>>
-                    <%= option.fullname %></option>
+            <select class="form-control selectpicker" data-live-search="true" name="<%= filter.name %>" title="Pilih <%=filter.name%>">
+                <%_filter.select.forEach((option) => {-%>
+                <option value="<%= option[filter.selectitem[0]] %>" <%= filterQuery.includes(filter.name) && filter.value == option[filter.selectitem[0]] ? "selected" : "" %>>
+                    <%= option[filter.selectitem[1]] %></option>
                 <%_ }) -%>
             </select>
             <%_ } else { -%>
