@@ -11,7 +11,7 @@ router.get('/', isLoggedIn, function (req, res) {
 
   let formFilter = [{ name: "ID", type: "number", value: req.query.ID, dbquery: "projects.projectid = $" },
   { name: "Name", type: "text", value: req.query.Name, dbquery: "POSITION( $ IN projects.name ) > 0" },
-  { name: "Member", type: "select", select: ["opt1", "opt2", "opt3"], value: req.query.Member, dbquery: `projectid IN (SELECT projectid FROM members WHERE userid = $)` , selectitem : ['userid','fullname']}];
+  { name: "Member", type: "select", select: ["opt1", "opt2", "opt3"], value: req.query.Member, dbquery: `projectid IN (SELECT projectid FROM members WHERE userid = $)`, selectitem: ['userid', 'fullname'] }];
 
   let currentPage = Number(req.query.page) || 1;
   let limit = 3;
@@ -34,7 +34,8 @@ router.get('/', isLoggedIn, function (req, res) {
         filterQuery, formFilter, loggedInUser, query, currentPage, projects, totalPage,
         currentURL: "projects",
         optTable: "projectopt",
-        url: req.url
+        url: req.url,
+        messages: req.flash('berhasil')[0]
       }
     );
   }).catch(err => console.log(err));
@@ -43,20 +44,20 @@ router.get('/', isLoggedIn, function (req, res) {
 // ========================================== APPLY OPTIONS ======================================================
 router.post('/', (req, res) => {
   let [checkedID, checkedName, checkedMembers] = [false, false, false];
-  if (req.body.checkopt){
+  if (req.body.checkopt) {
     if (!(req.body.checkopt instanceof Array))
       req.body.checkopt = [req.body.checkopt];
-      checkedID = (req.body.checkopt.includes('ID'))
-      checkedName = (req.body.checkopt.includes('Name'))
-      checkedMembers = (req.body.checkopt.includes('Members'))
+    checkedID = (req.body.checkopt.includes('ID'))
+    checkedName = (req.body.checkopt.includes('Name'))
+    checkedMembers = (req.body.checkopt.includes('Members'))
   }
   let options = [JSON.stringify({ "ID": checkedID, "Name": checkedName, "Members": checkedMembers }), req.session.user.userid];
-  
+
   //model -> project.js
   //save options setting for user
   Project.updateOptions(pool, options).then(() => {
-      req.session.user.projectopt = JSON.parse(options[0]);
-      res.redirect('projects');
+    req.session.user.projectopt = JSON.parse(options[0]);
+    res.redirect('projects');
   }).catch(err => console.log(err));
 })
 
@@ -66,8 +67,8 @@ router.get('/add', isLoggedIn, isAdmin, (req, res) => {
     res.render('projects/add', {
       loggedInUser: req.session.user,
       currentURL: 'projects',
-      Members : memberList.rows,
-      messages : req.flash('gagal')[0]
+      Members: memberList.rows,
+      messages: req.flash('gagal')[0]
     });
   }).catch(err => console.log(err));
 });
@@ -75,32 +76,42 @@ router.get('/add', isLoggedIn, isAdmin, (req, res) => {
 // =============================== POST ADD PROJECT ===================================
 router.post('/add', (req, res) => {
   let message = [];
-    
-    (req.body.projectName) ? "" : message.push('Name');
-    (req.body.checkBox) ? "" : message.push('Members');
-    if(message.length > 0){
-      req.flash('gagal', `${message.join(' and ')} can't be empty`);
-      res.redirect('/projects/add');
-    }else{
-      let countPage = new Project(pool);
-      let usersid = (req.body.checkBox.length == 1) ? [req.body.checkBox] : req.body.checkBox;
-      Project.addProject(pool, req.body.projectName).then(()=>{
-        Project.addMember(pool, usersid, req.body.projectName).then((message)=>{
-          req.flash('berhasil',message);
-          countPage.getNumofPage().then((count)=> {
+
+  (req.body.projectName) ? "" : message.push('Name');
+  (req.body.checkBox) ? "" : message.push('Members');
+  if (message.length > 0) {
+    req.flash('gagal', `${message.join(' and ')} can't be empty`);
+    res.redirect('/projects/add');
+  } else {
+    let countPage = new Project(pool);
+    let usersid = (req.body.checkBox.length == 1) ? [req.body.checkBox] : req.body.checkBox;
+    Project.addProject(pool, req.body.projectName).then(() => {
+      Project.addMember(pool, usersid, req.body.projectName).then((messages) => {
+        countPage.getNumofPage().then((count) => {
           let limit = 3;
-          res.redirect(`/projects?page=${Math.ceil(count.rows[0].count/limit)}`);
-         }).catch(err => console.log(err));
+          req.flash('berhasil', messages);
+          res.redirect(`/projects?page=${Math.ceil(count.rows[0].count / limit)}`);
         }).catch(err => console.log(err));
       }).catch(err => console.log(err));
-    }
+    }).catch(err => console.log(err));
+  }
 });
 
 // GET /projects/edit/:projectid
 // POST /projects/edit/:projectid
 
 // ================================= DELETE PROJECT ====================================
-
+router.get('/delete/:projectid', isLoggedIn, isAdmin, (req, res) => {
+  const {projectid} = req.params;
+  let countPage = new Project(pool);
+  countPage.getNumofPage(projectid).then((count) => {
+    Project.deleteProject(pool, projectid).then((messages) => {
+      let limit = 3;
+      req.flash('berhasil', messages);
+      res.redirect(`/projects?page=${Math.ceil(count.rows[0].count / limit)}`);
+    }).catch(err => console.log(err));
+  }).catch(err => console.log(err));
+});
 
 
 
