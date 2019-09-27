@@ -4,7 +4,7 @@ const pool = require('../util/connect');
 const Auth = require('../middleware/auth');
 const Users = require('../model/users');
 
-/* =============================================== GET users listing. ========================================================================= */
+/* =============================================== GET USERS LIST ========================================================================= */
 router.get('/', Auth.isLoggedin, Auth.isAdmin, function(req, res, next) {
   let filterQuery = req.query.checkBox || [];
   let objType = [{'value': true, 'display': 'Fulltime'},{'value': false, 'display' : 'Parttime'}];
