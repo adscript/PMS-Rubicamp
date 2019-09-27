@@ -38,8 +38,10 @@ module.exports = class Project {
     }
 
     getConstraintQuery() {
-        if (this.activeFilter.length > 0) {
-            this.sql += " WHERE " + this.activeFilter.join(" AND ");
+        if (this.activeFilter != undefined) {
+            if (this.activeFilter.length > 0) {
+                this.sql += " WHERE " + this.activeFilter.join(" AND ");
+            }
         }
         return this;
     }
@@ -53,9 +55,13 @@ module.exports = class Project {
         return this.pool.query(this.sql, arrConstraint);
     }
 
-    getNumofPage() {
+    getNumofPage(projectid) {
         let sqlCountPage = `SELECT COUNT(DISTINCT projectid) ${this.joinQuery}`;
         this.sql = sqlCountPage;
+        if(projectid){
+            this.sql += ` WHERE members.projectid <= $1`;
+            return this.pool.query(this.sql,[projectid]);
+        }
         return this.getConstraintQuery().startQuery(this.filterValue);
     }
 
@@ -85,11 +91,25 @@ module.exports = class Project {
                     userArray.push(`(${projectid.rows[0].projectid}, ${userid})`);
                 })
                 sqlAddMembers += userArray.join(', ');
-                pool.query(sqlAddMembers).then(()=>{
+                pool.query(sqlAddMembers).then(() => {
                     resolve(`Project ${projectName} added successfully`);
-                }).catch(err=>reject(err));
+                }).catch(err => reject(err));
             }).catch(err => reject(err));
         });
-
     }
+
+    static deleteProject(pool, projectid){
+        return new Promise((resolve, reject) => {
+            let sqlGetProjectName = `SELECT name FROM projects WHERE projectid = $1`;
+            pool.query(sqlGetProjectName,[projectid]).then(projectName => {
+                let sqlDeleteProject = `DELETE FROM projects WHERE projectid = $1`;
+                projectName = projectName.rows[0].name;
+                pool.query(sqlDeleteProject,[projectid]).then(() => {
+                    resolve(`Project ${projectName} with ID = ${projectid} delete successfully`);
+                }).catch(err => reject(err));
+            }).catch(err => reject(err));
+        })
+    }
+
+    
 }
