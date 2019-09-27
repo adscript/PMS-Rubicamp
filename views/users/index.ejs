@@ -7,132 +7,54 @@
         <h1>Users</h1>
         <hr />
         <!-- TAMPILAN FILTERS  -->
-        <h2>Filters</h2>
-        <form action="" method="GET" style="margin: 20px 180px">
-            <input type="hidden" name="page" value="1">
-            <%_ formFilter.forEach((data, index) => { -%>
-            <div class="form-group row">
-                <label class="col-sm-2 col-form-label">
-                    <div class="form-check">
-                        <input type="checkbox" class="form-check-input" name="checkbox" value="<%=data%>" />
-                        <label class="form-check-label">
-                            <%= data %>
-                        </label>
-                    </div>
-                </label>
-                <div class="col-sm-10">
-                    <input type="<%=formTypes[index]%>" class="form-control pr-5" placeholder="<%=data%>" name="<%=data%>">
-                </div>
-            </div>
-        <%_ }) -%>
-
-            <div class="form-group row">
-                <label for="inputEmail3" class="col-sm-2 col-form-label">
-                    <div class="form-check">
-                        <input type="checkbox" class="form-check-input" name="isType" value="on" />
-                        <label class="form-check-label" for="defaultCheck1">
-                            Type
-                        </label>
-                    </div>
-                </label>
-                <div class="col-sm-10">
-                    <select class="form-control" name="valueType">
-                        <option selected disabled>Choose Type</option>
-                        <option>Fulltime</option>
-                        <option>Parttime</option>
-                    </select>
-                </div>
-            </div>
-
-            <div class="form-group row">
-                <label for="inputEmail3" class="col-sm-2 col-form-label">
-                    <div class="form-check">
-                        <input type="checkbox" class="form-check-input" name="isRole" value="on" />
-                        <label class="form-check-label" for="defaultCheck1">
-                            Role
-                        </label>
-                    </div>
-                </label>
-                <div class="col-sm-10">
-                    <select class="form-control" name="valueRole">
-                        <option selected disabled>Choose Role</option>
-                        <option>Programmer</option>
-                        <option>Manager</option>
-                        <option>Quality Assurance</option>
-                    </select>
-                </div>
-            </div>
-
-            <div class="form-group row">
-                <div class="col-sm-10">
-                    <button type="submit" name="button" class="btn btn-primary">Search</a>
-                </div>
-            </div>
-        </form>
+        <% include ../partials/filter-form %>
 
         <!-- TAMPILAN OPTIONS -->
-        <h2>Options</h2>
-        <form action="#" method="POST" style="margin: 30px 180px">
-            <div class="form-group row">
-                <div class="col-sm-2">Columns</div>
-                <div class="col-sm-10">
-                    <%_ formOptions.forEach((data) => { -%>
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" name="checkopt" value="<%=data%>">
-                        <label class="form-check-label">
-                            <%=data%>
-                        </label>
-                    </div>
-                    <%_ }) -%>
-                </div>
-            </div>
-
-            <div class="form-group row">
-                <div class="col-sm-10">
-                    <button type="submit" class="btn btn-primary">Apply</button>
-                </div>
-            </div>
-        </form>
+        <% include ../partials/options-form %>
 
         <!-- TAMPILAN TABEL -->
         <table border="0" class="table table-striped" style="margin-top: 50px;">
-            <thead>
-                <tr>
-                    <th scope="col">#</th>
-                    <th scope="col">Name</th>
-                    <th scope="col">Members</th>
-                    <th scope="col">Action</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>1</td>
-                    <td>Adnan Fanspage</td>
-                    <td>Isyana, Raisa, Camila</td>
-                    <td>
-                        <a role="button" class="btn btn-success mr-1" href="projects/edit/1">Edit</button>
-                            <a role="button" class="btn btn-danger" href="projects/delete/1">Delete</button>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
+                <thead>
+                    <tr>
+                        <%- loggedInUser.usersopt["ID"] ? '<th scope="col">User ID</th>' : "" %>
+                        <%- loggedInUser.usersopt["Email"] ? '<th scope="col">Email</th>' : "" %>
+                        <%- loggedInUser.usersopt["Name"] ? '<th scope="col">Name</th>' : "" %>
+                        <%- loggedInUser.usersopt["Type"] ? '<th scope="col">Type</th>' : "" %>
+                        <%- loggedInUser.usersopt["Role"] ? '<th scope="col">Role</th>' : "" %>
+                        <th scope="col">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <%_ users.forEach((user) => { -%>
+                    <tr>
+                        <%- loggedInUser.usersopt["ID"] ? '<td>' + user.userid + '</td>' : "" %>
+                        <%- loggedInUser.usersopt["Email"] ? '<td>' + user.email + '</td>' : "" %>
+                        <%- loggedInUser.usersopt["Name"] ? '<td>' + user.fullname + '</td>' : "" %>
+                        <%- loggedInUser.usersopt["Type"] ? '<td>' + ((user.isfulltime) ? 'Fulltime' : 'Parttime')+ '</td>' : "" %>
+                        <%- loggedInUser.usersopt["Role"] ? '<td>' + user.generalrole + '</td>' : "" %>
+                        <td>
+                            <a role="button" class="btn btn-success mr-1" href="">Edit</a>
+                            <a role="button" class="btn btn-danger" href="">Delete</a>
+                        </td>
+                    </tr>
+                    <%_ }); -%>
+                </tbody>
+            </table>
 
         <!--PAGINATION-->
         <nav aria-label="...">
             <ul class="pagination">
-                <li class="page-item disabled">
-                    <a class="page-link" href="#" tabindex="-1" aria-disabled="true">Previous</a>
-                </li>
-                <li class="page-item"><a class="page-link" href="#">1</a></li>
-                <li class="page-item active" aria-current="page">
-                    <a class="page-link" href="#">2 <span class="sr-only">(current)</span></a>
-                </li>
-                <li class="page-item"><a class="page-link" href="#">3</a></li>
-                <li class="page-item">
-                    <a class="page-link" href="#">Next</a>
-                </li>
+              <li class="page-item <%= (currentPage == 1) ? 'disabled' : '' %>">
+                <a class="page-link" href="<%= url.includes('?') ? `/users${url.replace('/?page=' + currentPage,'?page=' + Number(currentPage-1))}` : '/users?page=' + Number(currentPage-1) %>">Previous</a>
+              </li>
+              <% for(let i = (currentPage == 1) ? currentPage : currentPage - 1; i <= totalPage && i <= currentPage + 5; i++){ %>
+              <li class="page-item <%= (i == currentPage) ? 'active' : '' %>"><a class="page-link" href="<%= url.includes('?') ? `/users${url.replace('/?page=' + currentPage,'?page=' + i)}` : '/users?page=' + i %>"><%= i %></a></li>
+              <% } %>
+              <li class="page-item <%= (currentPage == totalPage) ? 'disabled' : '' %> ">
+                <a class="page-link" href="<%= url.includes('?') ? `/users${url.replace('/?page=' + currentPage,'?page=' + Number(currentPage+1))}` : '/users?page=' + Number(currentPage+1) %>">Next</a>
+              </li>
             </ul>
-        </nav>
+          </nav>
 
         <a role="button" href="add" class="btn btn-primary">Add</a>
     </div>
