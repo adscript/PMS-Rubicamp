@@ -76,7 +76,6 @@ router.get('/add', isLoggedIn, isAdmin, (req, res) => {
 // =============================== POST ADD PROJECT ===================================
 router.post('/add', (req, res) => {
   let message = [];
-
   (req.body.projectName) ? "" : message.push('Name');
   (req.body.checkBox) ? "" : message.push('Members');
   if (message.length > 0) {
@@ -97,8 +96,52 @@ router.post('/add', (req, res) => {
   }
 });
 
-// GET /projects/edit/:projectid
+// ================================ GET EDIT PROJECT ======================================= 
+router.get('/edit/:projectid', isLoggedIn, (req, res) => {
+  const projectid = req.params.projectid;
+  let loggedInUser = req.session.user;
+  let allMembers = Project.getAllMember(pool);
+  let allProjectData = Project.dataProject(pool, projectid);
+  Promise.all([allMembers, allProjectData]).then((results) => {
+    const [membersRow, projectData] = results;
+    let Members = membersRow.rows;
+    let projectName = projectData.projectName;
+    let projectMembers = projectData.userid;
+    let membersID = projectMembers.map(user => {
+      return user.userid;
+    })
+    res.render('projects/edit', {
+      currentURL: 'projects',
+      loggedInUser, Members, projectName, projectMembers, membersID,
+      messages: req.flash('gagal')[0]
+    })
+  }).catch(err => console.log(err));
+});
+
 // POST /projects/edit/:projectid
+router.post('/edit/:projectid', (req, res) => {
+  const projectid = req.params.projectid;
+  let message = [];
+  (req.body.projectName) ? "" : message.push('Name');
+  (req.body.checkBox) ? "" : message.push('Members');
+  if (message.length > 0) {
+    req.flash('gagal', `${message.join(' and ')} can't be empty`);
+    res.redirect('/projects/add');
+  } else {
+    let countPage = new Project(pool);
+    let membersArr = (req.body.checkBox.length == 1) ? [req.body.checkBox] : req.body.checkBox;
+    Project.updateProjectName(pool, projectid, req.body.projectName).then(() => {
+      Project.updateProjectMembers(pool, projectid, membersArr, req.body.projectName).then(messages => {
+        countPage.getNumofPage().then((count) => {
+          let limit = 3;
+          req.flash('berhasil', messages);
+          res.redirect(`/projects?page=${Math.ceil(count.rows[0].count / limit)}`);
+        }).catch(err => console.log(err));
+      }).catch(err => console.log(err));
+    }).catch(err => console.log(err));
+  }
+})
+
 
 // ================================= DELETE PROJECT ====================================
 router.get('/delete/:projectid', isLoggedIn, isAdmin, (req, res) => {
