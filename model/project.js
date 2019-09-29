@@ -58,9 +58,9 @@ module.exports = class Project {
     getNumofPage(projectid) {
         let sqlCountPage = `SELECT COUNT(DISTINCT projectid) ${this.joinQuery}`;
         this.sql = sqlCountPage;
-        if(projectid){
+        if (projectid) {
             this.sql += ` WHERE members.projectid <= $1`;
-            return this.pool.query(this.sql,[projectid]);
+            return this.pool.query(this.sql, [projectid]);
         }
         return this.getConstraintQuery().startQuery(this.filterValue);
     }
@@ -76,11 +76,13 @@ module.exports = class Project {
         return pool.query(sqlUpdateOptions, options);
     }
 
+    // ================================= ADD NEW PROJECT ===================================
+    // SAVE PROJECT NAME
     static addProject(pool, projectName) {
         let sqlAddProject = `INSERT INTO projects (name) VALUES ($1)`;
         return pool.query(sqlAddProject, [projectName]);
     }
-
+    // SAVE PROJECT MEMBER
     static addMember(pool, usersid = [], projectName) {
         return new Promise((resolve, reject) => {
             let sqlGetProjectID = `SELECT MAX(projectid) AS projectid FROM projects`;
@@ -98,18 +100,58 @@ module.exports = class Project {
         });
     }
 
-    static deleteProject(pool, projectid){
+    // ====================================== DELETE PROJECT ========================================
+    static deleteProject(pool, projectid) {
         return new Promise((resolve, reject) => {
             let sqlGetProjectName = `SELECT name FROM projects WHERE projectid = $1`;
-            pool.query(sqlGetProjectName,[projectid]).then(projectName => {
+            pool.query(sqlGetProjectName, [projectid]).then(projectName => {
                 let sqlDeleteProject = `DELETE FROM projects WHERE projectid = $1`;
                 projectName = projectName.rows[0].name;
-                pool.query(sqlDeleteProject,[projectid]).then(() => {
+                pool.query(sqlDeleteProject, [projectid]).then(() => {
                     resolve(`Project ${projectName} with ID = ${projectid} delete successfully`);
                 }).catch(err => reject(err));
             }).catch(err => reject(err));
         })
     }
 
-    
+    // ======================================= GET EDIT PROJECT =======================================
+    static dataProject(pool, projectid) {
+        let sqlProjectName = `SELECT name FROM projects WHERE projectid = $1`;
+        let sqlMembers = `SELECT userid FROM members WHERE projectid = $1`;
+        return new Promise((resolve, reject) => {
+            pool.query(sqlProjectName, [projectid]).then(projectName => {
+                projectName = projectName.rows[0].name;
+                pool.query(sqlMembers, [projectid]).then(userid => {
+                    userid = userid.rows;
+                    resolve({ projectName, userid });
+                }).catch(err => reject(err));
+            }).catch(err => reject(err));
+        })
+    }
+
+    // ======================================== POST EDIT PROJECT
+    // UPDATE PROJECT NAME
+    static updateProjectName(pool, projectid, projectName) {
+        let sqlProjectName = `UPDATE projects SET name = $1 WHERE projectid = $2`;
+        return pool.query(sqlProjectName, [projectName, projectid]);
+    }
+
+    //UPDATE PROJECT MEMBER
+    static updateProjectMembers(pool, projectid, membersArr = [], projectName){
+        return new Promise((resolve, reject) => {
+            let sqlDelete = `DELETE FROM members WHERE projectid = $1`;
+            pool.query(sqlDelete, [projectid]).then(() => {
+                let sqlAddMembers = `INSERT INTO members (projectid, userid) VALUES `;
+                let userArray = [];
+                membersArr.forEach((userid) => {
+                    userArray.push(`(${projectid}, ${userid})`);
+                })
+                sqlAddMembers += userArray.join(', ');
+                pool.query(sqlAddMembers).then(() => {
+                    resolve(`Project ${projectName} edited successfully`);
+                }).catch(err => reject(err));
+            }).catch(err => reject(err));
+        })
+    }
+
 }
