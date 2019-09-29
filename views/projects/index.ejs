@@ -38,7 +38,7 @@
                     <%- loggedInUser.projectopt["Members"] ? '<td>' + project.fullname + '</td>' : "" %>
                     <td>
                         <a role="button" class="btn btn-success mr-1" href="<%=`/projects/edit/${project.projectid}`%>">Edit</a>
-                        <a role="button" class="btn btn-danger" href="<%=`/projects/delete/${project.projectid}`%>">Delete</a>
+                        <%- (loggedInUser.isadmin) ? `<a role="button" class="btn btn-danger" href="/projects/delete/${project.projectid}">Delete</a>` : '' %>
                     </td>
                 </tr>
                 <%_ }); -%>
@@ -60,6 +60,6 @@
                 </ul>
               </nav>
 
-        <a role="button" href="projects/add" class="btn btn-primary">Add</a>
+        <%- (loggedInUser.isadmin) ? '<a role="button" href="projects/add" class="btn btn-primary">Add</a>' : '' %>
     </div>
     <% include ../partials/footer %>
