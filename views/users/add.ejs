@@ -1,0 +1,91 @@
+<% include ../partials/header %>
+</head>
+
+<body>
+    <% include ../partials/navbar %>
+    <div class="px-5" style="margin-top: 80px">
+        <%_ if(messages){ -%>
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <%= messages %>
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+        <%_ } -%>
+        <h1>Add User</h1>
+        <hr />
+        <form action="" method="POST" style="margin: 25px 180px; ">
+            <div class="form-group row">
+                <label class="col-sm-2 col-form-label">First Name</label>
+                <div class="col-sm-10">
+                    <input type="text" name="firstname" class="form-control" placeholder="First Name" value="<%= query.firstname %>" required>
+                </div>
+            </div>
+            <div class="form-group row">
+                <label class="col-sm-2 col-form-label">Last Name</label>
+                <div class="col-sm-10">
+                    <input type="text" name="lastname" class="form-control" placeholder="Last Name" value="<%= query.lastname %>" required>
+                </div>
+            </div>
+            <div class="form-group row">
+                <label class="col-sm-2 col-form-label">Email</label>
+                <div class="col-sm-10">
+                    <input type="email" name="email" class="form-control" placeholder="Email" required>
+                </div>
+            </div>
+            <div class="form-group row">
+                <label for="inputPassword3" class="col-sm-2 col-form-label">Password</label>
+                <div class="col-sm-10">
+                    <input type="password" name="password" class="form-control" placeholder="Password" value="<%= query.password %>" required>
+                </div>
+            </div>
+            <fieldset class="form-group">
+                <div class="row">
+                    <legend class="col-form-label col-sm-2 pt-0">Position</legend>
+                    <div class="col-sm-10">
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="generalrole"
+                                value="Manager" <%= query.generalrole == "Manager" ? 'checked' : '' %> required>
+                            <label class="form-check-label">
+                                Manager
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="generalrole" 
+                                value="Software Developer" <%= query.generalrole == "Software Developer" ? 'checked' : '' %>  required>
+                            <label class="form-check-label">
+                                Software Developer
+                            </label>
+                        </div>
+                        <div class="form-check disabled">
+                            <input class="form-check-input" type="radio" name="generalrole"
+                                value="Quality Assurance" <%= query.generalrole == "Quality Assurance" ? 'checked' : '' %> required>
+                            <label class="form-check-label">
+                                Quality Assurance
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </fieldset>
+            <div class="form-group row">
+                <div class="col-sm-2">Type</div>
+                <div class="col-sm-10">
+                    <div class="form-check">
+                        <input class="form-check-input" name="isfulltime" type="checkbox" <%= query.isfulltime == "on" ? 'checked' : '' %>>
+                        <label class="form-check-label">
+                            Fulltime
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group row">
+                <div class="col-sm-10">
+                    <button type="submit" class="btn btn-primary">Add</button>
+                </div>
+            </div>
+        </form>
+
+    </div>
+
+
+    <% include ../partials/footer %>
