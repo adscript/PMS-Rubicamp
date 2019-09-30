@@ -38,6 +38,7 @@ module.exports = class Project {
     }
 
     getConstraintQuery() {
+        console.log(this.activeFilter);
         if (this.activeFilter != undefined) {
             if (this.activeFilter.length > 0) {
                 this.sql += " WHERE " + this.activeFilter.join(" AND ");
@@ -55,12 +56,17 @@ module.exports = class Project {
         return this.pool.query(this.sql, arrConstraint);
     }
 
-    getNumofPage(projectid) {
+    getNumofPage(projectid, loginUser) {
         let sqlCountPage = `SELECT COUNT(DISTINCT projectid) ${this.joinQuery}`;
         this.sql = sqlCountPage;
         if (projectid) {
+            let arrData = [projectid]
             this.sql += ` WHERE members.projectid <= $1`;
-            return this.pool.query(this.sql, [projectid]);
+            if(!loginUser.isadmin){
+                this.sql += ` AND users.userid IN (SELECT userid FROM members WHERE projects.projectid IN (SELECT projectid FROM members WHERE userid = $2) )`;
+                arrData.push(loginUser.userid);
+            }
+            return this.pool.query(this.sql,arrData);
         }
         return this.getConstraintQuery().startQuery(this.filterValue);
     }
@@ -129,7 +135,7 @@ module.exports = class Project {
         })
     }
 
-    // ======================================== POST EDIT PROJECT
+    // ======================================== POST EDIT PROJECT ======================================
     // UPDATE PROJECT NAME
     static updateProjectName(pool, projectid, projectName) {
         let sqlProjectName = `UPDATE projects SET name = $1 WHERE projectid = $2`;
