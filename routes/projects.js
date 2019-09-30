@@ -118,21 +118,22 @@ router.get('/edit/:projectid', isLoggedIn, (req, res) => {
   }).catch(err => console.log(err));
 });
 
-// POST /projects/edit/:projectid
+// =================================== POST EDIT PROJECT ROUTER ================================
 router.post('/edit/:projectid', (req, res) => {
   const projectid = req.params.projectid;
   let message = [];
+  let loggedInUser = req.session.user;
   (req.body.projectName) ? "" : message.push('Name');
   (req.body.checkBox) ? "" : message.push('Members');
   if (message.length > 0) {
     req.flash('gagal', `${message.join(' and ')} can't be empty`);
-    res.redirect('/projects/add');
+    res.redirect('/projects/edit');
   } else {
     let countPage = new Project(pool);
     let membersArr = (req.body.checkBox.length == 1) ? [req.body.checkBox] : req.body.checkBox;
     Project.updateProjectName(pool, projectid, req.body.projectName).then(() => {
       Project.updateProjectMembers(pool, projectid, membersArr, req.body.projectName).then(messages => {
-        countPage.getNumofPage().then((count) => {
+        countPage.getNumofPage(projectid, loggedInUser).then((count) => {
           let limit = 3;
           req.flash('berhasil', messages);
           res.redirect(`/projects?page=${Math.ceil(count.rows[0].count / limit)}`);
@@ -157,8 +158,10 @@ router.get('/delete/:projectid', isLoggedIn, isAdmin, (req, res) => {
 });
 
 
-
 // GET /projects/overview/:projectid
+
+
+
 
 // GET /projects/activity/:projectid
 
