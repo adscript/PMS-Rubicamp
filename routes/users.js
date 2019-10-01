@@ -7,14 +7,13 @@ const Users = require('../model/users');
 /* =============================================== GET USERS LIST ========================================================================= */
 router.get('/', Auth.isLoggedin, Auth.isAdmin, function(req, res, next) {
   let filterQuery = req.query.checkBox || [];
-  let objType = [{'value': true, 'display': 'Fulltime'},{'value': false, 'display' : 'Parttime'}];
+  let objType = [{'value': 'true', 'display': 'Fulltime'},{'value': 'false', 'display' : 'Parttime'}];
   let objRole = [{'value' : 'Software Developer' ,'display': 'Software Developer'}, {'value':'Manager', 'display' : 'Manager'}, {'value':'Quality Assurance', 'display':'Quality Assurance'}];
   let formFilter = [{ name: "ID", type: "number", value: req.query.ID, dbquery: "userid = $" },
                     { name: "Email", type: "text", value: req.query.Email, dbquery: "POSITION( $ IN email ) > 0" },
                     { name: "Name", type: "text", value: req.query.Name, dbquery: "POSITION( $ IN CONCAT(firstname,' ',lastname) ) > 0" },
                     { name: "Type", type: "select", select: objType, value: req.query.Type, dbquery: `isfulltime = $`, selectitem: ['value','display'] },
                     { name: "Role", type: "select", select: objRole, value: req.query.Role, dbquery: `generalrole = $`, selectitem: ['value','display'] }];
-
   let formOptions = ['ID', 'Email', 'Name', 'Type', 'Role'];
   let loggedInUser = req.session.user;
   let currentPage = Number(req.query.page) || 1;
@@ -145,8 +144,6 @@ router.post('/edit/:userid', Auth.isLoggedin, Auth.isAdmin, (req,res) => {
       res.redirect(`/users?page=${Page}`);
     })
   })
-  
-
 })
 
 module.exports = router;
