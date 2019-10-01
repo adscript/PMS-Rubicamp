@@ -159,21 +159,82 @@ router.get('/delete/:projectid', isLoggedIn, isAdmin, (req, res) => {
 
 
 // GET /projects/overview/:projectid
+router.get('/overview:projectid', isLoggedIn, isAdmin, (req, res, next) => {
+  let projectid = req.params.projectid;
 
+  res.render('projects/overview/index', {
+    currentURL : 'overview',
+    loggedInUser : req.session.user
+  });
+
+});
 
 
 
 // GET /projects/activity/:projectid
 
-// GET /projects/members/:projectid
+// =========================================== GET /projects/members/:projectid ====================================================
+router.get('/members/:projectid', isLoggedIn, (req, res, next) => {
+  let projectid = req.params.projectid;
+  let filterQuery = req.query.checkBox || [];
+
+  let objPosition = [{'value' : 'Software Developer' ,'display': 'Software Developer'}, {'value':'Manager', 'display' : 'Manager'}, {'value':'Quality Assurance', 'display':'Quality Assurance'}];
+  let formFilter = [{ name: "ID", type: "number", value: req.query.ID, dbquery: "users.userid = $" },
+                    { name: "Name", type: "text", value: req.query.Name, dbquery: "POSITION( $ IN CONCAT(firstname,' ',lastname) ) > 0" },
+                    { name: "Position", type: "select", select: objPosition, value: req.query.Position, dbquery: `users.generalrole = $`, selectitem: ['value', 'display'] }];
+  let formOptions = ['ID', 'Name', 'Position'];
+  let loggedInUser = req.session.user;
+  let currentPage = Number(req.query.page) || 1;
+  let limit = 3;
+  let offset = (currentPage - 1) * limit;
+  let query = req.query;
+  
+  let countUser = Project.countUser(pool, formFilter, filterQuery, projectid);
+  let memberList = Project.membersList(pool, formFilter, filterQuery, projectid, limit, offset);
+
+  Promise.all([memberList, countUser]).then(results => {
+    const [Members, totalMembers] = results.map(element => element.rows);
+    const totalPage = Math.ceil(totalMembers[0].count / limit);
+    res.render('projects/members', {
+      formOptions, filterQuery, formFilter, loggedInUser, query, currentPage, Members, totalPage, projectid,
+      currentURL: "members",
+      optTable: "membersopt",
+      url: req.url,
+      messages: req.flash('berhasil')[0]
+    })
+  }).catch(err => console.log(err));
+
+
+})
+
+router.post('/members/:projectid', (req, res) => {
+  let projectid = req.params.projectid;
+  let [checkedID, checkedName, checkedPosition] = [false, false, false];
+  if (req.body.checkopt) {
+    if (!(req.body.checkopt instanceof Array))
+      req.body.checkopt = [req.body.checkopt];
+    checkedID = (req.body.checkopt.includes('ID'));
+    checkedName = (req.body.checkopt.includes('Name'));
+    checkedPosition = (req.body.checkopt.includes('Position'));
+  }
+  let options = [JSON.stringify({ "ID": checkedID, "Name": checkedName, "Position": checkedPosition }), req.session.user.userid];
+  console.log(options);
+  //model -> project.js
+  //save options setting for user
+  Project.updateMembersOptions(pool, options).then(() => {
+    req.session.user.membersopt = JSON.parse(options[0]);
+    console.log(req.session.user.membersopt);
+    res.redirect(`/projects/members/${projectid}`);
+  }).catch(err => console.log(err));
+})
+
+
 // GET /projects/members/:projectid/add
 // POST /projects/members/:projectid/add
 // GET /projects/members/:projectid/edit/:memberid
 // POST /projects/members/:projectid/edit/:memberid
 // GET /projects/members/:projectid/delete/:memberid
 
-router.get('/overview', (req, res, next) => {
-  res.render('projects/overview');
-});
+
 
 module.exports = router;
