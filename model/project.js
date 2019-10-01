@@ -38,7 +38,6 @@ module.exports = class Project {
     }
 
     getConstraintQuery() {
-        console.log(this.activeFilter);
         if (this.activeFilter != undefined) {
             if (this.activeFilter.length > 0) {
                 this.sql += " WHERE " + this.activeFilter.join(" AND ");
@@ -160,4 +159,46 @@ module.exports = class Project {
         })
     }
 
+    // ========================================== GET MEMBERS PROJECT OVERVIEW ==================================
+    static filterMember(pool, sql, withWhere, formFilter = [], activeQuery = [], limit = 3, offset = 0 , usePagination = false){
+        let activeFilter = [];
+        let filterValue = [];
+        for (let item of formFilter) {
+            if (item.value && activeQuery.includes(item.name)) {
+                activeFilter.push(item.dbquery.replace('$', `$${activeFilter.length + 1}`));
+                filterValue.push(item.value);
+            }
+        }
+        if (activeFilter != undefined && activeFilter.length > 0) {
+            if(withWhere)
+                sql += ` AND ${activeFilter.join(" AND ")}`;
+            else
+                sql += ` WHERE ${activeFilter.join(" AND ")}`;
+        }
+        if(usePagination){
+            sql += `ORDER BY members.userid ASC LIMIT ${limit} OFFSET ${offset}`;
+        }
+        return pool.query(sql,filterValue);
+    }
+    
+    static countUser(pool, formFilter = [], activeQuery = [], projectid){
+        let sqlCountMembers = `SELECT COUNT(DISTINCT userid) FROM members INNER JOIN users USING (userid) WHERE projectid = ${projectid}`;
+        let withWhere = true;
+        return Project.filterMember(pool, sqlCountMembers, withWhere, formFilter, activeQuery)
+    }
+
+    static membersList(pool, formFilter = [], activeQuery = [], projectid, limit, offset){
+        let sqlGetMembers = `SELECT users.userid, CONCAT(firstname, ' ', lastname) as name, generalrole FROM users INNER JOIN members USING (userid) WHERE members.projectid = ${projectid}`;
+        let withWhere = true;
+        let usePagination = true;
+        return Project.filterMember(pool, sqlGetMembers, withWhere, formFilter, activeQuery, limit, offset, usePagination); 
+    }
+
+    static updateMembersOptions(pool, options = []) {
+        let sqlUpdateOptions = `UPDATE users SET membersopt = $1 WHERE userid = $2`;
+        return pool.query(sqlUpdateOptions, options);
+    }
+
+
+    
 }
