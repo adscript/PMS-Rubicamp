@@ -146,7 +146,7 @@ router.post('/edit/:projectid', (req, res) => {
 
 // ================================= DELETE PROJECT ====================================
 router.get('/delete/:projectid', isLoggedIn, isAdmin, (req, res) => {
-  const {projectid} = req.params;
+  const { projectid } = req.params;
   let countPage = new Project(pool);
   countPage.getNumofPage(projectid).then((count) => {
     Project.deleteProject(pool, projectid).then((messages) => {
@@ -163,8 +163,8 @@ router.get('/overview:projectid', isLoggedIn, isAdmin, (req, res, next) => {
   let projectid = req.params.projectid;
 
   res.render('projects/overview/index', {
-    currentURL : 'overview',
-    loggedInUser : req.session.user
+    currentURL: 'overview',
+    loggedInUser: req.session.user
   });
 
 });
@@ -173,22 +173,22 @@ router.get('/overview:projectid', isLoggedIn, isAdmin, (req, res, next) => {
 
 // GET /projects/activity/:projectid
 
-// =========================================== GET /projects/members/:projectid ====================================================
-router.get('/members/:projectid', isLoggedIn, (req, res, next) => {
+// =========================================== GET MEMBERS PAGE ====================================================
+router.get('/members/:projectid', isLoggedIn, (req, res) => {
   let projectid = req.params.projectid;
   let filterQuery = req.query.checkBox || [];
 
-  let objPosition = [{'value' : 'Software Developer' ,'display': 'Software Developer'}, {'value':'Manager', 'display' : 'Manager'}, {'value':'Quality Assurance', 'display':'Quality Assurance'}];
+  let objPosition = [{ 'value': 'Software Developer', 'display': 'Software Developer' }, { 'value': 'Manager', 'display': 'Manager' }, { 'value': 'Quality Assurance', 'display': 'Quality Assurance' }];
   let formFilter = [{ name: "ID", type: "number", value: req.query.ID, dbquery: "users.userid = $" },
-                    { name: "Name", type: "text", value: req.query.Name, dbquery: "POSITION( $ IN CONCAT(firstname,' ',lastname) ) > 0" },
-                    { name: "Position", type: "select", select: objPosition, value: req.query.Position, dbquery: `users.generalrole = $`, selectitem: ['value', 'display'] }];
+  { name: "Name", type: "text", value: req.query.Name, dbquery: "POSITION( $ IN CONCAT(firstname,' ',lastname) ) > 0" },
+  { name: "Position", type: "select", select: objPosition, value: req.query.Position, dbquery: `users.generalrole = $`, selectitem: ['value', 'display'] }];
   let formOptions = ['ID', 'Name', 'Position'];
   let loggedInUser = req.session.user;
   let currentPage = Number(req.query.page) || 1;
   let limit = 3;
   let offset = (currentPage - 1) * limit;
   let query = req.query;
-  
+
   let countUser = Project.countUser(pool, formFilter, filterQuery, projectid);
   let memberList = Project.membersList(pool, formFilter, filterQuery, projectid, limit, offset);
 
@@ -200,13 +200,13 @@ router.get('/members/:projectid', isLoggedIn, (req, res, next) => {
       currentURL: "members",
       optTable: "membersopt",
       url: req.url,
-      messages: req.flash('berhasil')[0]
+      messages: req.flash('berhasil')[0],
+      addNotif: req.flash('failed')[0]
     })
   }).catch(err => console.log(err));
-
-
 })
 
+// ========================================== POST MEMBERS OVERVIEW OPTIONS ========================================================
 router.post('/members/:projectid', (req, res) => {
   let projectid = req.params.projectid;
   let [checkedID, checkedName, checkedPosition] = [false, false, false];
@@ -218,23 +218,95 @@ router.post('/members/:projectid', (req, res) => {
     checkedPosition = (req.body.checkopt.includes('Position'));
   }
   let options = [JSON.stringify({ "ID": checkedID, "Name": checkedName, "Position": checkedPosition }), req.session.user.userid];
-  console.log(options);
   //model -> project.js
   //save options setting for user
   Project.updateMembersOptions(pool, options).then(() => {
     req.session.user.membersopt = JSON.parse(options[0]);
-    console.log(req.session.user.membersopt);
     res.redirect(`/projects/members/${projectid}`);
   }).catch(err => console.log(err));
 })
 
+// ====================================== GET PROJECTS ADD MEMBERS IN OVERVIEW ==================================================
+router.get('/members/:projectid/add', isLoggedIn, (req, res) => {
+  let projectid = req.params.projectid;
+  Project.userNotAssigned(pool, projectid).then(results => {
+    let Users = results.rows;
+    if (Users.length > 0) {
+      res.render(`projects/members/add`, {
+        currentURL: 'members',
+        loggedInUser: req.session.user,
+        projectid, Users,
+        messages: req.flash('berhasil')[0]
+      })
+    } else {
+      req.flash('failed', 'Cant Add More User, All Users assigned');
+      res.redirect(`/projects/members/${projectid}`);
+    }
+  })
+})
 
-// GET /projects/members/:projectid/add
 // POST /projects/members/:projectid/add
-// GET /projects/members/:projectid/edit/:memberid
-// POST /projects/members/:projectid/edit/:memberid
-// GET /projects/members/:projectid/delete/:memberid
+router.post('/members/:projectid/add', isLoggedIn, (req, res) => {
+  let projectid = req.params.projectid;
+  let userData = req.body;
+  let limit = 3;
+  Project.addUser(pool, userData, projectid).then(() => {
+    Project.countMembersAssigned(pool, projectid).then((count) => {
+      req.flash('berhasil', `User with id = ${userData.userid} added successfully`);
+      res.redirect(`/projects/members/${projectid}?page=${Math.ceil(count.rows[0].count / limit)}`);
+    })
+  })
+})
 
+// GET /projects/members/:projectid/edit/:memberid
+router.get('/members/:projectid/edit/:userid', isLoggedIn, (req, res) => {
+  let { projectid, userid } = req.params;
+  Project.renderMembers(pool, projectid, userid).then((result) => {
+    let userData = result.rows[0];
+    let loggedInUser = req.session.user;
+    res.render('projects/members/edit', {
+      userData, loggedInUser, projectid, userid,
+      currentURL: 'members',
+    });
+  })
+})
+
+
+// POST /projects/members/:projectid/edit/:memberid
+router.post('/members/:projectid/edit/:userid', isLoggedIn, (req, res) => {
+  let { projectid, userid } = req.params;
+  let { roleawal, role, memberid } = req.body;
+  let limit = 3;
+  Project.countBefore(pool, memberid, projectid).then(count => {
+    let Page = Math.ceil(count.rows[0].count / limit);
+    if (!role || role == roleawal) {
+      req.flash('failed', `Position not changed`)
+      res.redirect(`/projects/members/${projectid}?page=${Page}`)
+    } else {
+      Project.editMembers(pool, role, memberid).then(() => {
+        req.flash('berhasil', `User position successfully changed from ${roleawal} to ${role}`)
+        res.redirect(`/projects/members/${projectid}?page=${Page}`);
+      })
+    }
+  })
+})
+
+
+
+// GET /projects/members/:projectid/delete/:memberid
+router.get('/members/:projectid/delete/:memberid', isLoggedIn, (req, res) => {
+  let { projectid, memberid } = req.params;
+  let limit = 3;
+  let Count = Project.countBefore(pool, memberid, projectid);
+  let Deleted = Project.deleteMembers(pool, memberid);
+
+  Promise.all([Count, Deleted]).then(results => {
+    let Page = Math.ceil(results[0].rows[0].count / limit);
+    req.flash('berhasil', `User Members Deleted Successfully`)
+    res.redirect(`/projects/members/${projectid}?page=${Page}`);
+  })
+
+});
 
 
 module.exports = router;
