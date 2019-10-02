@@ -176,7 +176,7 @@ module.exports = class Project {
                 sql += ` WHERE ${activeFilter.join(" AND ")}`;
         }
         if(usePagination){
-            sql += `ORDER BY members.userid ASC LIMIT ${limit} OFFSET ${offset}`;
+            sql += `ORDER BY members.id ASC LIMIT ${limit} OFFSET ${offset}`;
         }
         return pool.query(sql,filterValue);
     }
@@ -188,7 +188,7 @@ module.exports = class Project {
     }
 
     static membersList(pool, formFilter = [], activeQuery = [], projectid, limit, offset){
-        let sqlGetMembers = `SELECT users.userid, CONCAT(firstname, ' ', lastname) as name, generalrole FROM users INNER JOIN members USING (userid) WHERE members.projectid = ${projectid}`;
+        let sqlGetMembers = `SELECT members.id, users.userid, CONCAT(firstname, ' ', lastname) as name, role, generalrole FROM users INNER JOIN members USING (userid) WHERE members.projectid = ${projectid} `;
         let withWhere = true;
         let usePagination = true;
         return Project.filterMember(pool, sqlGetMembers, withWhere, formFilter, activeQuery, limit, offset, usePagination); 
@@ -199,6 +199,47 @@ module.exports = class Project {
         return pool.query(sqlUpdateOptions, options);
     }
 
+    static userNotAssigned(pool, projectid){
+        let sqlUser = `SELECT DISTINCT users.userid, CONCAT(firstname,' ',lastname) as fullname FROM members INNER JOIN users USING (userid) INNER JOIN projects USING (projectid) WHERE userid NOT IN (SELECT DISTINCT userid FROM members WHERE projectid = $1)`;
+        return pool.query(sqlUser, [projectid]);
+    }
 
+    // ADD MEMBERS MODEL
+    static countMembersAssigned(pool, projectid){
+        let sqlCount = `SELECT COUNT(DISTINCT userid) FROM members WHERE projectid = $1`;
+        return pool.query(sqlCount, [projectid]);
+    }
+
+    static addUser(pool, userData, projectid){
+        let Column = ['projectid', ...Object.keys(userData)];
+        let columnValues = [projectid, ...Object.values(userData)];
+        let dummy = ['$1','$2'];
+        (Column.length > 2) ? dummy.push('$3') : '';
+        let sqlAddUser = `INSERT INTO members(${Column.join(', ')}) VALUES (${dummy})`;
+        return pool.query(sqlAddUser, columnValues);
+    }
+
+    // DELETE MEMBERS MODEL
+    static deleteMembers(pool, memberid){
+        let sqlDelete = `DELETE FROM members WHERE id = $1`;
+        return pool.query(sqlDelete, [memberid]);
+    }
+
+    static countBefore(pool, memberid, projectid){
+        let sqlCount = `SELECT COUNT(DISTINCT userid) FROM members WHERE id <= $1 AND projectid = $2`;
+        return pool.query(sqlCount,[memberid, projectid]);
+    }
+
+    // EDIT MEMBERS MODEL
+    static editMembers(pool, role, memberid){
+        let sqlEditMember = `UPDATE members SET role = $1 WHERE id = $2`;
+        return pool.query(sqlEditMember, [role, memberid]);
+    }
     
+    static renderMembers(pool, projectid, userid){
+        let sqlGetMember = `SELECT members.*, CONCAT(firstname,' ',lastname) AS fullname FROM members INNER JOIN users USING (userid) WHERE projectid = $1 AND userid = $2`;
+        return pool.query(sqlGetMember,[projectid, userid]); 
+    }
+
+
 }
