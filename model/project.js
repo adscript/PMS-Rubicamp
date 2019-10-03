@@ -61,11 +61,11 @@ module.exports = class Project {
         if (projectid) {
             let arrData = [projectid]
             this.sql += ` WHERE members.projectid <= $1`;
-            if(!loginUser.isadmin){
+            if (!loginUser.isadmin) {
                 this.sql += ` AND users.userid IN (SELECT userid FROM members WHERE projects.projectid IN (SELECT projectid FROM members WHERE userid = $2) )`;
                 arrData.push(loginUser.userid);
             }
-            return this.pool.query(this.sql,arrData);
+            return this.pool.query(this.sql, arrData);
         }
         return this.getConstraintQuery().startQuery(this.filterValue);
     }
@@ -142,7 +142,7 @@ module.exports = class Project {
     }
 
     //UPDATE PROJECT MEMBER
-    static updateProjectMembers(pool, projectid, membersArr = [], projectName){
+    static updateProjectMembers(pool, projectid, membersArr = [], projectName) {
         return new Promise((resolve, reject) => {
             let sqlDelete = `DELETE FROM members WHERE projectid = $1`;
             pool.query(sqlDelete, [projectid]).then(() => {
@@ -160,7 +160,7 @@ module.exports = class Project {
     }
 
     // ========================================== GET MEMBERS PROJECT OVERVIEW ==================================
-    static filterMember(pool, sql, withWhere, formFilter = [], activeQuery = [], limit = 3, offset = 0 , usePagination = false){
+    static filterMember(pool, sql, withWhere, formFilter = [], activeQuery = [], limit = 3, offset = 0, usePagination = false) {
         let activeFilter = [];
         let filterValue = [];
         for (let item of formFilter) {
@@ -170,28 +170,28 @@ module.exports = class Project {
             }
         }
         if (activeFilter != undefined && activeFilter.length > 0) {
-            if(withWhere)
+            if (withWhere)
                 sql += ` AND ${activeFilter.join(" AND ")}`;
             else
                 sql += ` WHERE ${activeFilter.join(" AND ")}`;
         }
-        if(usePagination){
+        if (usePagination) {
             sql += `ORDER BY members.id ASC LIMIT ${limit} OFFSET ${offset}`;
         }
-        return pool.query(sql,filterValue);
+        return pool.query(sql, filterValue);
     }
-    
-    static countUser(pool, formFilter = [], activeQuery = [], projectid){
+
+    static countUser(pool, formFilter = [], activeQuery = [], projectid) {
         let sqlCountMembers = `SELECT COUNT(DISTINCT userid) FROM members INNER JOIN users USING (userid) WHERE projectid = ${projectid}`;
         let withWhere = true;
         return Project.filterMember(pool, sqlCountMembers, withWhere, formFilter, activeQuery)
     }
 
-    static membersList(pool, formFilter = [], activeQuery = [], projectid, limit, offset){
+    static membersList(pool, formFilter = [], activeQuery = [], projectid, limit, offset) {
         let sqlGetMembers = `SELECT members.id, users.userid, CONCAT(firstname, ' ', lastname) as name, role, generalrole FROM users INNER JOIN members USING (userid) WHERE members.projectid = ${projectid} `;
         let withWhere = true;
         let usePagination = true;
-        return Project.filterMember(pool, sqlGetMembers, withWhere, formFilter, activeQuery, limit, offset, usePagination); 
+        return Project.filterMember(pool, sqlGetMembers, withWhere, formFilter, activeQuery, limit, offset, usePagination);
     }
 
     static updateMembersOptions(pool, options = []) {
@@ -199,47 +199,81 @@ module.exports = class Project {
         return pool.query(sqlUpdateOptions, options);
     }
 
-    static userNotAssigned(pool, projectid){
+    static userNotAssigned(pool, projectid) {
         let sqlUser = `SELECT DISTINCT users.userid, CONCAT(firstname,' ',lastname) as fullname FROM members INNER JOIN users USING (userid) INNER JOIN projects USING (projectid) WHERE userid NOT IN (SELECT DISTINCT userid FROM members WHERE projectid = $1)`;
         return pool.query(sqlUser, [projectid]);
     }
 
     // ADD MEMBERS MODEL
-    static countMembersAssigned(pool, projectid){
+    static countMembersAssigned(pool, projectid) {
         let sqlCount = `SELECT COUNT(DISTINCT userid) FROM members WHERE projectid = $1`;
         return pool.query(sqlCount, [projectid]);
     }
 
-    static addUser(pool, userData, projectid){
+    static addUser(pool, userData, projectid) {
         let Column = ['projectid', ...Object.keys(userData)];
         let columnValues = [projectid, ...Object.values(userData)];
-        let dummy = ['$1','$2'];
+        let dummy = ['$1', '$2'];
         (Column.length > 2) ? dummy.push('$3') : '';
         let sqlAddUser = `INSERT INTO members(${Column.join(', ')}) VALUES (${dummy})`;
         return pool.query(sqlAddUser, columnValues);
     }
 
     // DELETE MEMBERS MODEL
-    static deleteMembers(pool, memberid){
+    static deleteMembers(pool, memberid) {
         let sqlDelete = `DELETE FROM members WHERE id = $1`;
         return pool.query(sqlDelete, [memberid]);
     }
 
-    static countBefore(pool, memberid, projectid){
+    static countBefore(pool, memberid, projectid) {
         let sqlCount = `SELECT COUNT(DISTINCT userid) FROM members WHERE id <= $1 AND projectid = $2`;
-        return pool.query(sqlCount,[memberid, projectid]);
+        return pool.query(sqlCount, [memberid, projectid]);
     }
 
     // EDIT MEMBERS MODEL
-    static editMembers(pool, role, memberid){
+    static editMembers(pool, role, memberid) {
         let sqlEditMember = `UPDATE members SET role = $1 WHERE id = $2`;
         return pool.query(sqlEditMember, [role, memberid]);
     }
-    
-    static renderMembers(pool, projectid, userid){
+
+    static renderMembers(pool, projectid, userid) {
         let sqlGetMember = `SELECT members.*, CONCAT(firstname,' ',lastname) AS fullname FROM members INNER JOIN users USING (userid) WHERE projectid = $1 AND userid = $2`;
-        return pool.query(sqlGetMember,[projectid, userid]); 
+        return pool.query(sqlGetMember, [projectid, userid]);
     }
 
+    // ========================================= ISSUES ==============================================================
+    static filterIssues(pool, sql, formFilter = [], activeQuery = [], limit = 3, offset = 0, usePagination = false) {
+        let activeFilter = [];
+        let filterValue = [];
+        for (let item of formFilter) {
+            if (item.value && activeQuery.includes(item.name)) {
+                activeFilter.push(item.dbquery.replace('$', `$${activeFilter.length + 1}`));
+                filterValue.push(item.value);
+            }
+        }
+        if (activeFilter != undefined && activeFilter.length > 0) {
+            sql += ` AND ${activeFilter.join(" AND ")}`;
+        }
+        if (usePagination) {
+            sql += `ORDER BY u1.userid ASC LIMIT ${limit} OFFSET ${offset}`;
+        }
+        return pool.query(sql, filterValue);
+    }
+
+    static countIssues(pool, formFilter = [], filterQuery = [], projectid) {
+        let sqlCountIssue = `SELECT COUNT(DISTINCT i1.issueid) FROM issues as i1 WHERE i1.projectid = ${projectid}`;
+        return this.filterIssues(pool, sqlCountIssue, formFilter, filterQuery);
+    }
+
+    static renderIssues(pool, formFilter = [], filterQuery = [], projectid, limit, offset) {
+        let sqlGetIssues = `SELECT i1.* , CONCAT(u1.firstname,' ',u1.lastname) as assigneename, CONCAT(u2.firstname,' ',u2.lastname) AS authorname, i2.subject AS parenttaskname
+        FROM issues as i1 LEFT JOIN users as u1 ON u1.userid = i1.assignee LEFT JOIN users as u2 ON u2.userid = i1.author LEFT JOIN issues AS i2 ON i2.issueid = i1.parenttask WHERE i1.projectid = ${projectid}`;
+        return this.filterIssues(pool, sqlGetIssues, formFilter, filterQuery, limit, offset, true);
+    }
+
+    static updateIssuesOptions(pool, options = []) {
+        let sqlUpdateOptions = `UPDATE users SET issuesopt = $1 WHERE userid = $2`;
+        return pool.query(sqlUpdateOptions, options);
+    }
 
 }
