@@ -9,8 +9,10 @@ module.exports = {
     isLoggedin: (req, res, next) => {
         if (req.session.user)
             next();
-        else
+        else{
+            req.session.latestUrl = req.originalUrl;
             res.redirect('/');
+        }
     },
 
     isAdmin: (req, res, next) => {
