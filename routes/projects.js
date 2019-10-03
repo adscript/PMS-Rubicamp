@@ -4,6 +4,9 @@ const pool = require('../util/connect');
 const isLoggedIn = require('../middleware/auth').isLoggedin;
 const isAdmin = require('../middleware/auth').isAdmin;
 const Project = require('../model/project');
+var moment = require('moment');
+moment().format();
+
 
 // ==================================== LOAD PROJECT PAGE ===============================================================================
 router.get('/', isLoggedIn, function (req, res) {
@@ -180,8 +183,8 @@ router.get('/members/:projectid', isLoggedIn, (req, res) => {
 
   let objPosition = [{ 'value': 'Software Developer', 'display': 'Software Developer' }, { 'value': 'Manager', 'display': 'Manager' }, { 'value': 'Quality Assurance', 'display': 'Quality Assurance' }];
   let formFilter = [{ name: "ID", type: "number", value: req.query.ID, dbquery: "users.userid = $" },
-  { name: "Name", type: "text", value: req.query.Name, dbquery: "POSITION( $ IN CONCAT(firstname,' ',lastname) ) > 0" },
-  { name: "Position", type: "select", select: objPosition, value: req.query.Position, dbquery: `users.generalrole = $`, selectitem: ['value', 'display'] }];
+                    { name: "Name", type: "text", value: req.query.Name, dbquery: "POSITION( $ IN CONCAT(firstname,' ',lastname) ) > 0" },
+                    { name: "Position", type: "select", select: objPosition, value: req.query.Position, dbquery: `users.generalrole = $`, selectitem: ['value', 'display'] }];
   let formOptions = ['ID', 'Name', 'Position'];
   let loggedInUser = req.session.user;
   let currentPage = Number(req.query.page) || 1;
@@ -307,6 +310,70 @@ router.get('/members/:projectid/delete/:memberid', isLoggedIn, (req, res) => {
   })
 
 });
+
+// GET ISSUES PAGE
+router.get('/issues/:projectid', isLoggedIn, (req, res) => {
+  let projectid = req.params.projectid;
+  let filterQuery = req.query.checkBox || [];
+
+  let objTracker = [{ 'value': 'Bug', 'display': 'Bug' }, { 'value': 'Feature', 'display': 'Feature' }, { 'value': 'Support', 'display': 'Support' }];
+  let formFilter = [{ name: "ID", type: "number", value: req.query.ID, dbquery: "i1.issueid = $" },
+                    { name: "Subject", type: "text", value: req.query.Subject, dbquery: "POSITION( LOWER($) IN LOWER(i1.subject) ) > 0" },
+                    { name: "Tracker", type: "select", select: objTracker, value: req.query.Tracker, dbquery: `i1.tracker = $`, selectitem: ['value', 'display'] }];
+  let formOptions = ['ID', 'Subject', 'Tracker', 'Description', 'Status', 'Priority', 'Assignee', 'Start Date', 'Due Date', 'Estimate Time', 'Done', 'Author'];
+  let loggedInUser = req.session.user;
+  let currentPage = Number(req.query.page) || 1;
+  let limit = 3;
+  let offset = (currentPage - 1) * limit;
+  let query = req.query;
+
+  let countIssues = Project.countIssues(pool, formFilter, filterQuery, projectid);
+  let issuesList = Project.renderIssues(pool, formFilter, filterQuery, projectid, limit, offset);
+
+  Promise.all([issuesList, countIssues]).then(results => {
+    const [Issues, totalIssues] = results.map(element => element.rows);
+    const totalPage = Math.ceil(totalIssues[0].count / limit);
+    res.render('projects/issues', {
+      formOptions, filterQuery, formFilter, loggedInUser, query, currentPage, Issues, totalPage, projectid, moment,
+      currentURL: "issues",
+      optTable: "issuesopt",
+      url: req.url,
+      messages: req.flash('berhasil')[0],
+      addNotif: req.flash('failed')[0]
+    })
+  }).catch(err => console.log(err));
+})
+
+
+// =============================================== POST ISSUES FORM ================================================================
+router.post('/issues/:projectid', isLoggedIn, (req, res) => {
+  let projectid = req.params.projectid;
+  let [checkedID, checkedSubject, checkedTracker, checkedDescription, checkedStatus, checkedPriority, checkedAssignee, checkedStartDate, checkedDueDate, checkedEstTime, checkedDone, checkedAuthor] = [false, false, false, false, false, false, false, false, false, false, false, false];
+  if (req.body.checkopt) {
+    if (!(req.body.checkopt instanceof Array))
+      req.body.checkopt = [req.body.checkopt];
+    checkedID = req.body.checkopt.includes('ID');
+    checkedSubject = (req.body.checkopt.includes('Subject'));
+    checkedTracker = (req.body.checkopt.includes('Tracker'));
+    checkedDescription = (req.body.checkopt.includes('Description'));
+    checkedStatus = (req.body.checkopt.includes('Status'));
+    checkedPriority = (req.body.checkopt.includes('Priority'));
+    checkedAssignee = (req.body.checkopt.includes('Assignee'));
+    checkedStartDate = (req.body.checkopt.includes('Start Date'));
+    checkedDueDate = (req.body.checkopt.includes('Due Date'));
+    checkedEstTime = (req.body.checkopt.includes('Estimate Time'));
+    checkedDone = (req.body.checkopt.includes('Done'));
+    checkedAuthor = (req.body.checkopt.includes('Author'));
+  }
+  let options = [JSON.stringify({ "ID": checkedID, "Subject": checkedSubject, "Tracker": checkedTracker, "Description": checkedDescription, "Status": checkedStatus, "Priority": checkedPriority, "Assignee" : checkedAssignee, "Start Date" : checkedStartDate, "Due Date" : checkedDueDate, "Estimate Time" : checkedEstTime, "Done": checkedDone, "Author": checkedAuthor}), req.session.user.userid];
+  //model -> project.js
+  //save options setting for user
+  Project.updateIssuesOptions(pool, options).then(() => {
+    req.session.user.issuesopt = JSON.parse(options[0]);
+    res.redirect(`/projects${req.body.lasturl}`);
+  }).catch(err => console.log(err));
+})
+
 
 
 module.exports = router;
