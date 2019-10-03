@@ -8,12 +8,15 @@ router.use('/projects', projectsRouter);
 
 /* GET home page. */
 router.get('/', checkAuth, (req, res, next) => {
-  res.render('index', { messages: req.flash('info')[0] });
+  res.render('index', { 
+    messages: req.flash('info')[0],
+    latestUrl: req.session.latestUrl
+ });
 });
 
 // Validate After Submit Login Form
 router.post('/validate', (req, res, next) => {
-  const { email, password } = req.body;
+  let { email, password, latestUrl } = req.body;
   sql = "SELECT * FROM users WHERE email = $1 AND password = $2";
   pool.query(sql, [email, password]).then((queryResult) => {
 
@@ -22,7 +25,8 @@ router.post('/validate', (req, res, next) => {
       const userData = queryResult.rows[0];
       delete userData.password;
       req.session.user = userData;
-      res.redirect('/projects');
+      latestUrl = latestUrl || '/projects';
+      res.redirect(latestUrl);
     } else {
       // Sending flash alert if failed
       req.flash('info', 'Wrong email or password');
