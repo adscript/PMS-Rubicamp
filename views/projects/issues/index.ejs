@@ -1,6 +1,7 @@
 <%_ include ../../partials/header -%>
 <link rel="stylesheet" href="/stylesheets/style.css">
 <link rel="stylesheet" href="/stylesheets/sidebar.css">
+
 </head>
 
 <body>
@@ -16,12 +17,12 @@
         </div>
         <%_ } -%>
         <%_ if(addNotif){ -%>
-            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                <%= addNotif %>
-                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <%= addNotif %>
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
         <%_ } -%>
         <h1>Issues</h1>
         <hr />
@@ -49,6 +50,7 @@
                         <%- loggedInUser.issuesopt["Done"] ? '<th scope="col">Done</th>' : "" %>
                         <%- loggedInUser.issuesopt["Parent Task"] ? '<th scope="col">Parent Task</th>' : "" %>
                         <%- loggedInUser.issuesopt["Author"] ? '<th scope="col">Author</th>' : "" %>
+                        <th scope="col">File</th>
                         <th scope="col">Action</th>
                     </tr>
                 </thead>
@@ -68,11 +70,19 @@
                         <%- loggedInUser.issuesopt["Done"] ? '<td>' + issue.done + '</td>' : "" %>
                         <%- loggedInUser.issuesopt["Parent Task"] ? '<td>' + issue.parenttaskname + '</td>' : "" %>
                         <%- loggedInUser.issuesopt["Author"] ? '<td>' + issue.authorname + '</td>' : "" %>
-                        <td>
-                            <a role="button" class="btn btn-success mr-1"
-                                href="<%=`/projects/issues/${projectid}/edit/${issue.issueid}`%>">Edit</a>
-                            <%- (loggedInUser.isadmin || loggedInUser.generalrole == "Manager") ? `<a role="button" class="btn btn-danger" href="/projects/issues/${projectid}/delete/${issue.issueid}">Delete</a>` : '' %>
+                        <%_ if(issue.files){ -%>
+                        <td><a role="button" class="btn btn-warning mr-1 mb-2" href="<%=`${issue.files}`%>"><i
+                                    class="fas fa-file-download"></i></td>
+                        <%_ } else { -%>
+                        <td>  </td>
+                        <%_ } -%>
+                        <td style="width: auto">
+                            <a role="button" class="btn btn-success mr-1 mb-2"
+                                href="<%=`/projects/issues/${projectid}/edit/${issue.issueid}`%>"><i
+                                    class="fas fa-marker"></i></a>
+                            <%- (loggedInUser.isadmin || loggedInUser.generalrole == "Manager") ? `<a role="button" class="btn btn-danger mb-2" href="/projects/issues/${projectid}/delete/${issue.issueid}"><i class="fas fa-trash"></i></a>` : '' %>
                         </td>
+
                     </tr>
                     <%_ }); -%>
                 </tbody>
@@ -81,20 +91,24 @@
 
         <!--PAGINATION-->
         <nav aria-label="...">
-                <ul class="pagination">
-                  <li class="page-item <%= (currentPage == 1) ? 'disabled' : '' %>">
-                    <a class="page-link" href="<%= url.includes('?') ? `/projects${url.replace('?page=' + currentPage,'?page=' + Number(currentPage-1))}` : `/projects/members/${projectid}?page=` + Number(currentPage-1) %>">Previous</a>
-                  </li>
-                  <% for(let i = (currentPage == 1) ? currentPage : currentPage - 1; i <= totalPage && i <= currentPage + 5; i++){ %>
-                  <li class="page-item <%= (i == currentPage) ? 'active' : '' %>"><a class="page-link" href="<%= url.includes('?') ? `/projects${url.replace('?page=' + currentPage,'?page=' + i)}` : `/projects/members/${projectid}?page=` + i %>"><%= i %></a></li>
-                  <% } %>
-                  <li class="page-item <%= (currentPage == totalPage) ? 'disabled' : '' %> ">
-                    <a class="page-link" href="<%= url.includes('?') ? `/projects${url.replace('?page=' + currentPage,'?page=' + Number(currentPage+1))}` : `/projects/members/${projectid}?page=` + Number(currentPage+1) %>">Next</a>
-                  </li>
-                </ul>
-              </nav>
+            <ul class="pagination">
+                <li class="page-item <%= (currentPage == 1) ? 'disabled' : '' %>">
+                    <a class="page-link"
+                        href="<%= url.includes('?') ? `/projects${url.replace('?page=' + currentPage,'?page=' + Number(currentPage-1))}` : `/projects/issues/${projectid}?page=` + Number(currentPage-1) %>">Previous</a>
+                </li>
+                <% for(let i = (currentPage == 1) ? currentPage : currentPage - 1; i <= totalPage && i <= currentPage + 5; i++){ %>
+                <li class="page-item <%= (i == currentPage) ? 'active' : '' %>"><a class="page-link"
+                        href="<%= url.includes('?') ? `/projects${url.replace('?page=' + currentPage,'?page=' + i)}` : `/projects/issues/${projectid}?page=` + i %>"><%= i %></a>
+                </li>
+                <% } %>
+                <li class="page-item <%= (currentPage == totalPage) ? 'disabled' : '' %> ">
+                    <a class="page-link"
+                        href="<%= url.includes('?') ? `/projects${url.replace('?page=' + currentPage,'?page=' + Number(currentPage+1))}` : `/projects/issues/${projectid}?page=` + Number(currentPage+1) %>">Next</a>
+                </li>
+            </ul>
+        </nav>
 
         <%- (loggedInUser.isadmin || loggedInUser.generalrole == "Manager") ? `<a role="button" href="${projectid}/add" class="btn btn-primary">Add</a>` : '' %>
     </div>
-
+    <script src="https://kit.fontawesome.com/d8ee6b40b3.js" crossorigin="anonymous"></script>
     <%_ include ../../partials/footer -%>
