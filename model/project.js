@@ -255,7 +255,7 @@ module.exports = class Project {
             sql += ` AND ${activeFilter.join(" AND ")}`;
         }
         if (usePagination) {
-            sql += `ORDER BY u1.userid ASC LIMIT ${limit} OFFSET ${offset}`;
+            sql += `ORDER BY i1.issueid ASC LIMIT ${limit} OFFSET ${offset}`;
         }
         return pool.query(sql, filterValue);
     }
@@ -275,5 +275,92 @@ module.exports = class Project {
         let sqlUpdateOptions = `UPDATE users SET issuesopt = $1 WHERE userid = $2`;
         return pool.query(sqlUpdateOptions, options);
     }
+
+    static getAssigneeUser(pool, projectid) {
+        let sqlUser = `SELECT DISTINCT users.userid, CONCAT(firstname,' ',lastname) as fullname FROM users INNER JOIN members USING (userid) WHERE users.userid IN (SELECT userid FROM members WHERE projectid = $1)`;
+        return pool.query(sqlUser, [projectid]);
+    }
+
+    static getParentIssue(pool, projectid, issueid = 0) {
+        let sqlIssue = `SELECT DISTINCT issueid, subject FROM issues WHERE projectid = $1`;
+        if (issueid > 0)
+            sqlIssue += ` AND issueid != ${issueid}`;
+        return pool.query(sqlIssue, [projectid]);
+    }
+
+    static countAfterAddEdit(pool, projectid, issueid = null, afterEdit = false) {
+        let sqlCount = `SELECT COUNT(DISTINCT issueid) FROM issues WHERE projectid = $1 `
+        let Constraint = [projectid];
+        if (afterEdit) {
+            sqlCount += `AND issueid <= $2`;
+            Constraint.push(issueid);
+        }
+        return pool.query(sqlCount, Constraint);
+    }
+
+    static addIssue(pool, data) {
+        let datakeys = Object.keys(data);
+        let datavalues = Object.values(data);
+        let arrBinding = datakeys.map((value, index) => {
+            return `$${index + 1}`;
+        })
+
+        let sqlCount = `INSERT INTO issues (${datakeys.join(', ')}) VALUES (${arrBinding.join(', ')})`;
+        return pool.query(sqlCount, datavalues);
+    }
+
+    static renderIssuesEdit(pool, projectid, issueid) {
+        let sqlGetIssues = `SELECT i1.* , CONCAT(u1.firstname,' ',u1.lastname) as assigneename, CONCAT(u2.firstname,' ',u2.lastname) AS authorname, i2.subject AS parenttaskname
+        FROM issues as i1 LEFT JOIN users as u1 ON u1.userid = i1.assignee LEFT JOIN users as u2 ON u2.userid = i1.author LEFT JOIN issues AS i2 ON i2.issueid = i1.parenttask WHERE i1.projectid = $1 AND i1.issueid = $2`;
+        return pool.query(sqlGetIssues, [projectid, issueid]);
+    }
+
+    static updateIssues(pool, data, issueid) {
+        return new Promise((resolve, reject) => {
+
+            let closeddate = false;
+            if (data.status == 'Closed') {
+                closeddate = true;
+            }
+            let dataKeys = Object.keys(data);
+            let dataValues = Object.values(data);
+            let arrBinding = dataKeys
+                .filter((value, index) => {
+                    return dataValues[index] != '';
+                }).map((value, index) => {
+                    return `${value} = $${index + 1}`;
+                })
+
+            data = dataKeys.reduce((obj, key, index) => {
+                if (dataValues[index] != '')
+                    obj[key] = dataValues[index];
+                return obj;
+            }, {})
+
+            dataValues = Object.values(data);
+            let sqlUpdateIssue = `UPDATE issues SET ${arrBinding.join(', ')}, updateddate = now()${(closeddate) ? ', closeddate = now() ' : ' '}WHERE issueid = $${arrBinding.length + 1}`;
+
+            pool.query(sqlUpdateIssue, [...dataValues, issueid]).then(() => {
+                resolve(data);
+            }).catch(err => reject(err));
+        })
+    }
+
+    static deleteIssue(pool, issueid){
+        let sqlDeleteIssue = `DELETE FROM issues WHERE issueid = $1 AND closeddate is null`;
+        return pool.query(sqlDeleteIssue, [issueid]);
+    }
+
+    static addActivity(pool, Data, oldData, projectid, userid) {
+        let title = `[${Data.tracker}] ${Data.subject} #${projectid} (${Data.status})`;
+        let doneString = (oldData.done == Data.done) ? `${Data.done} not changed` : `${oldData.done} --> ${Data.done}`;
+        let spentString = (oldData.spenttime == Data.spenttime) ? `${Data.spenttime} not changed` : `${oldData.spenttime} --> ${Data.spenttime}`;
+        let description = `Done (%): ${doneString}. Spent time (hours): ${spentString}.`;
+        let author = userid;
+        let Column = ['projectid', 'title', 'description', 'author'];
+        let sqlAuthor = `INSERT INTO activity(${Column.join(', ')}) VALUES ($1, $2, $3, $4)`;
+        return pool.query(sqlAuthor, [projectid, title, description, author]);
+    }
+
 
 }
