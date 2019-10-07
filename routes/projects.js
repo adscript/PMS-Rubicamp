@@ -5,6 +5,7 @@ const isLoggedIn = require('../middleware/auth').isLoggedin;
 const isAdmin = require('../middleware/auth').isAdmin;
 const Project = require('../model/project');
 var moment = require('moment');
+const path = require('path');
 moment().format();
 
 
@@ -183,8 +184,8 @@ router.get('/members/:projectid', isLoggedIn, (req, res) => {
 
   let objPosition = [{ 'value': 'Software Developer', 'display': 'Software Developer' }, { 'value': 'Manager', 'display': 'Manager' }, { 'value': 'Quality Assurance', 'display': 'Quality Assurance' }];
   let formFilter = [{ name: "ID", type: "number", value: req.query.ID, dbquery: "users.userid = $" },
-                    { name: "Name", type: "text", value: req.query.Name, dbquery: "POSITION( $ IN CONCAT(firstname,' ',lastname) ) > 0" },
-                    { name: "Position", type: "select", select: objPosition, value: req.query.Position, dbquery: `users.generalrole = $`, selectitem: ['value', 'display'] }];
+  { name: "Name", type: "text", value: req.query.Name, dbquery: "POSITION( $ IN CONCAT(firstname,' ',lastname) ) > 0" },
+  { name: "Position", type: "select", select: objPosition, value: req.query.Position, dbquery: `users.generalrole = $`, selectitem: ['value', 'display'] }];
   let formOptions = ['ID', 'Name', 'Position'];
   let loggedInUser = req.session.user;
   let currentPage = Number(req.query.page) || 1;
@@ -318,8 +319,8 @@ router.get('/issues/:projectid', isLoggedIn, (req, res) => {
 
   let objTracker = [{ 'value': 'Bug', 'display': 'Bug' }, { 'value': 'Feature', 'display': 'Feature' }, { 'value': 'Support', 'display': 'Support' }];
   let formFilter = [{ name: "ID", type: "number", value: req.query.ID, dbquery: "i1.issueid = $" },
-                    { name: "Subject", type: "text", value: req.query.Subject, dbquery: "POSITION( LOWER($) IN LOWER(i1.subject) ) > 0" },
-                    { name: "Tracker", type: "select", select: objTracker, value: req.query.Tracker, dbquery: `i1.tracker = $`, selectitem: ['value', 'display'] }];
+  { name: "Subject", type: "text", value: req.query.Subject, dbquery: "POSITION( LOWER($) IN LOWER(i1.subject) ) > 0" },
+  { name: "Tracker", type: "select", select: objTracker, value: req.query.Tracker, dbquery: `i1.tracker = $`, selectitem: ['value', 'display'] }];
   let formOptions = ['ID', 'Subject', 'Tracker', 'Description', 'Status', 'Priority', 'Assignee', 'Start Date', 'Due Date', 'Estimate Time', 'Done', 'Author'];
   let loggedInUser = req.session.user;
   let currentPage = Number(req.query.page) || 1;
@@ -365,7 +366,7 @@ router.post('/issues/:projectid', isLoggedIn, (req, res) => {
     checkedDone = (req.body.checkopt.includes('Done'));
     checkedAuthor = (req.body.checkopt.includes('Author'));
   }
-  let options = [JSON.stringify({ "ID": checkedID, "Subject": checkedSubject, "Tracker": checkedTracker, "Description": checkedDescription, "Status": checkedStatus, "Priority": checkedPriority, "Assignee" : checkedAssignee, "Start Date" : checkedStartDate, "Due Date" : checkedDueDate, "Estimate Time" : checkedEstTime, "Done": checkedDone, "Author": checkedAuthor}), req.session.user.userid];
+  let options = [JSON.stringify({ "ID": checkedID, "Subject": checkedSubject, "Tracker": checkedTracker, "Description": checkedDescription, "Status": checkedStatus, "Priority": checkedPriority, "Assignee": checkedAssignee, "Start Date": checkedStartDate, "Due Date": checkedDueDate, "Estimate Time": checkedEstTime, "Done": checkedDone, "Author": checkedAuthor }), req.session.user.userid];
   //model -> project.js
   //save options setting for user
   Project.updateIssuesOptions(pool, options).then(() => {
@@ -374,6 +375,144 @@ router.post('/issues/:projectid', isLoggedIn, (req, res) => {
   }).catch(err => console.log(err));
 })
 
+// ADD ISSUE
+router.get('/issues/:projectid/add', isLoggedIn, (req, res) => {
+  let projectid = req.params.projectid;
+  let loggedInUser = req.session.user;
+  let Users = Project.getAssigneeUser(pool, projectid);
+  let Issues = Project.getParentIssue(pool, projectid);
+  Promise.all([Users, Issues]).then(results => {
+    res.render('projects/issues/add.ejs', {
+      currentURL: "issues",
+      loggedInUser, projectid,
+      Users: results[0].rows,
+      Issues: results[1].rows,
+      messages: req.flash('berhasil')[0]
+    })
+  })
+})
+
+router.post('/issues/:projectid/add', isLoggedIn, (req, res) => {
+  let projectid = req.params.projectid;
+  let loggedInUser = req.session.user;
+  let Data = { ...req.body, 'author': loggedInUser.userid, 'projectid': projectid };
+  (Data.parenttask || Data.parenttask.length === 0) ? delete Data.parenttask : '';
+  if (req.files) {
+    let File = req.files.uploadFile;
+    let nameUnique = moment().format('YYYY-MM-DD_HH-mm-ss-SSS');
+    let fileName = `${nameUnique}-${File.name.split(' ').join('-')}`
+    let uploadPath = path.join(__dirname, '..', 'public', 'uploads', fileName);
+    Data = { ...Data, 'files': `/uploads/${fileName}`, 'filename': `${File.name}` };
+    let addIssue = Project.addIssue(pool, Data);
+    let count = Project.countAfterAddEdit(pool, projectid);
+    Promise.all([addIssue, count]).then(results => {
+      File.mv(uploadPath, (err) => {
+        if (err) throw err;
+        req.flash('berhasil', `File uploaded, Issue added successfully `);
+        res.redirect(`/projects/issues/${projectid}?page=${Math.ceil(results[1].rows[0].count / 3)}`);
+      })
+    })
+  } else {
+    let addIssue = Project.addIssue(pool, Data);
+    let count = Project.countAfterAddEdit(pool, projectid);
+    Promise.all([addIssue, count]).then(results => {
+      req.flash('berhasil', `Issue added successfully`);
+      res.redirect(`/projects/issues/${projectid}?page=${Math.ceil(results[1].rows[0].count / 3)}`);
+    })
+  }
+})
+
+// EDIT ISSUE
+router.get('/issues/:projectid/edit/:issueid', isLoggedIn, (req, res) => {
+  let { projectid, issueid } = req.params;
+  let loggedInUser = req.session.user;
+  let getParentIssue = Project.getParentIssue(pool, projectid, issueid);
+  let getAssigneeUser = Project.getAssigneeUser(pool, projectid);
+  let renderIssueEdit = Project.renderIssuesEdit(pool, projectid, issueid);
+  Promise.all([getParentIssue, getAssigneeUser, renderIssueEdit]).then(Results => {
+    res.render('projects/issues/edit.ejs', {
+      currentURL: "issues",
+      loggedInUser, projectid, moment,
+      Issue: Results[2].rows[0],
+      Issues: Results[0].rows,
+      Users: Results[1].rows,
+      messages: req.flash('berhasil')[0]
+    })
+  }).catch(err => console.log(err));
+})
+
+// POST EDIT ISSUE
+router.post('/issues/:projectid/edit/:issueid', isLoggedIn, (req, res) => {
+  let { projectid, issueid } = req.params;
+  let loggedInUser = req.session.user;
+
+  let oldData = JSON.parse(req.body.oldData);
+  let Data = req.body;
+  delete Data.oldData;
+  oldData.startdate = moment(oldData.startdate).format('YYYY-MM-DD');
+  oldData.duedate = moment(oldData.duedate).format('YYYY-MM-DD');
+  Data.startdate = moment(Data.startdate, 'MM/DD/YYYY').format('YYYY-MM-DD');
+  Data.duedate = moment(Data.duedate, 'MM/DD/YYYY').format('YYYY-MM-DD');
+  
+  let changedFile = ((req.files) ? req.files.uploadFile.name : '');
+  console.log(changedFile);
+  if (req.files && changedFile != oldData.filename) {
+    console.log('Beda');
+    let File = req.files.uploadFile;
+    let nameUnique = moment().format('YYYY-MM-DD_HH-mm-ss-SSS');
+    let fileName = `${nameUnique}-${File.name.split(' ').join('-')}`
+    let uploadPath = path.join(__dirname, '..', 'public', 'uploads', fileName);
+    Data = { ...Data, 'files': `/uploads/${fileName}`, 'filename': `${File.name}` };
+    let count = Project.countAfterAddEdit(pool, projectid, issueid, true);
+    let editIssue = Project.updateIssues(pool, Data, issueid);
+
+    Promise.all([count, editIssue]).then(results => {
+      let changedData = Object.keys(Data).filter(key => {
+        return (Data[key] != oldData[key] && Data[key] != '' && !['files', 'filename'].includes(key));
+      }).join(', ');
+      File.mv(uploadPath, (err) => {
+        if (err) return err;
+        Project.addActivity(pool, Data, oldData, projectid, loggedInUser.userid).then(() => {
+          let notif = (changedData.length == 0) ? 'File changed and uploaded' : `${changedData} and File changed`
+          req.flash('berhasil', `${notif}`);
+          res.redirect(`/projects/issues/${projectid}?page=${Math.ceil(results[0].rows[0].count / 3)}`);
+        })
+      })
+    }).catch(err => console.log(err));
+  } else {
+    let count = Project.countAfterAddEdit(pool, projectid,issueid, true);
+    let editIssue = Project.updateIssues(pool, Data, issueid);
+    Promise.all([count, editIssue]).then((results) => {
+      let changedData = Object.keys(Data).filter(key => {
+        return (Data[key] != oldData[key] && Data[key] != '');
+      }).join(', ')
+      if (changedData.length == 0){
+        changedData = 'Nothing';
+        req.flash('berhasil', `${changedData} changed`);
+        res.redirect(`/projects/issues/${projectid}?page=${Math.ceil(results[0].rows[0].count / 3)}`);
+      }
+      else if(changedData.length > 0) {
+      Project.addActivity(pool, Data, oldData, projectid, loggedInUser.userid).then(() => {
+        req.flash('berhasil', `${changedData} changed`);
+        res.redirect(`/projects/issues/${projectid}?page=${Math.ceil(results[0].rows[0].count / 3)}`);
+      });
+    }
+    }).catch(err => res.render('error', { message: err, error: err }));
+  }
+})
+
+// DELETE ISSUE
+router.get('/issues/:projectid/delete/:issueid', isLoggedIn, (req, res) => {
+  let { projectid, issueid } = req.params;
+  let loggedInUser = req.session.user;
+  let count = Project.countAfterAddEdit(pool, projectid,issueid, true);
+  let deleteIssue = Project.deleteIssue(pool, issueid);
+
+  Promise.all([count, deleteIssue]).then(results => {
+    req.flash('berhasil', `Issue #${issueid} deleted`);
+    res.redirect(`/projects/issues/${projectid}?page=${Math.ceil(results[0].rows[0].count / 3)}`);
+  })
+})
 
 
 module.exports = router;
