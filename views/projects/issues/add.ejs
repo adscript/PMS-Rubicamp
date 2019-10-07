@@ -1,0 +1,266 @@
+<%_ include ../../partials/header -%>
+<link rel="stylesheet" href="/stylesheets/style.css">
+<link rel="stylesheet" href="/stylesheets/sidebar.css">
+<link href="https://unpkg.com/gijgo@1.9.13/css/gijgo.min.css" rel="stylesheet" type="text/css" />
+</head>
+
+<body>
+    <%_ include ../../partials/navbar -%>
+    <%_ include ../../partials/sidebar -%>
+    <div role="main" class="col-md-9 ml-sm-auto col-lg-10 px-4 " style="margin-top:30px;">
+        <%_ if(messages){ -%>
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <%= messages %>
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+        <%_ } -%>
+
+        <h1>Add Issue</h1>
+        <hr />
+        <form method="POST" action="" enctype="multipart/form-data">
+
+            <fieldset class="form-group">
+                <div class="row">
+                    <legend class="col-form-label col-sm-2 pt-0">Tracker</legend>
+                    <div class="col-sm-10">
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="tracker" id="gridRadios1" value="Bug"
+                                required>
+                            <label class="form-check-label" for="gridRadios1">
+                                Bug
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="tracker" id="gridRadios2"
+                                value="Feature">
+                            <label class="form-check-label" for="gridRadios2">
+                                Feature
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="tracker" id="gridRadios3"
+                                value="Support">
+                            <label class="form-check-label" for="gridRadios3">
+                                Support
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </fieldset>
+
+            <div class="form-group row">
+                <label for="inputEmail3" class="col-sm-2 col-form-label">Subject</label>
+                <div class="col-sm-10">
+                    <input type="text" class="form-control" id="inputEmail3" placeholder="Subject" name="subject">
+                </div>
+            </div>
+            <div class="form-group row">
+                <label for="textarea" class="col-sm-2 col-form-label">Description</label>
+                <div class="col-sm-10">
+                    <textarea class="form-control" id="textarea" rows="3" placeholder="Description"
+                        name="description"></textarea>
+                </div>
+            </div>
+
+            <fieldset class="form-group">
+                <div class="row">
+                    <legend class="col-form-label col-sm-2 pt-0">Status</legend>
+                    <div class="col-sm-10">
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="status" id="gridRadios1" value="New">
+                            <label class="form-check-label" for="gridRadios1">
+                                New
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="gridRadios" id="gridRadios2"
+                                value="In Progress" disabled>
+                            <label class="form-check-label" for="gridRadios2">
+                                In Progress
+                            </label>
+                        </div>
+                        <div class="form-check disabled">
+                            <input class="form-check-input" type="radio" name="gridRadios" id="gridRadios3"
+                                value="Resolved" disabled>
+                            <label class="form-check-label" for="gridRadios3">
+                                Resolved
+                            </label>
+                        </div>
+                        <div class="form-check disabled">
+                            <input class="form-check-input" type="radio" name="gridRadios" id="gridRadios4"
+                                value="Feedback" disabled>
+                            <label class="form-check-label" for="gridRadios4">
+                                Feedback
+                            </label>
+                        </div>
+                        <div class="form-check disabled">
+                            <input class="form-check-input" type="radio" name="gridRadios" id="gridRadios5"
+                                value="Closed" disabled>
+                            <label class="form-check-label" for="gridRadios5">
+                                Closed
+                            </label>
+                        </div>
+                        <div class="form-check disabled">
+                            <input class="form-check-input" type="radio" name="gridRadios" id="gridRadios6"
+                                value="Rejected" disabled>
+                            <label class="form-check-label" for="gridRadios6">
+                                Rejected
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </fieldset>
+
+            <fieldset class="form-group">
+                <div class="row">
+                    <legend class="col-form-label col-sm-2 pt-0">Priority</legend>
+                    <div class="col-sm-10">
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="priority" id="gridRadios1"
+                                value="Normal">
+                            <label class="form-check-label" for="gridRadios1">
+                                Normal
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="priority" id="gridRadios2" value="High">
+                            <label class="form-check-label" for="gridRadios2">
+                                High
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="priority" id="gridRadios3"
+                                value="Urgent">
+                            <label class="form-check-label" for="gridRadios3">
+                                Urgent
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="priority" id="gridRadios4"
+                                value="Immediate">
+                            <label class="form-check-label" for="gridRadios4">
+                                Immediate
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </fieldset>
+
+            <div class="form-group row">
+                <label for="inputPassword3" class="col-sm-2 col-form-label">Assignee</label>
+                <div class="col-sm-10">
+                    <select class="form-control selectpicker" data-live-search="true" name="assignee"
+                        title="Choose User" required>
+                        <%_ Users.forEach(User => { -%>
+                        <option value="<%= User.userid %>">
+                            <%= User.fullname %></option>
+                        <%_ }) -%>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group row">
+                <label for="datepicker" class="col-sm-2 col-form-label">Start Date</label>
+                <div class="col-sm-10">
+                    <input placeholder="Start date" class="form-control" id="datepicker" name="startdate" required>
+                </div>
+            </div>
+
+            <div class="form-group row">
+                <label for="duedate1" class="col-sm-2 col-form-label">Due Date</label>
+                <div class="col-sm-10">
+                    <input placeholder="Due date" class="form-control" id="datepicker1" name="duedate" required>
+                </div>
+            </div>
+
+            <div class="form-group row">
+                <label for="estimatetime" class="col-sm-2 col-form-label">Estimated Time</label>
+                <div class="input-group col-sm-4">
+                    <input type="text" class="form-control" id="estimatetime" name="estimatedtime"
+                        placeholder="Estimated Time" aria-describedby="basic-addon2">
+                        <div class="input-group-append">
+                                <span class="input-group-text" id="basic-addon2">Hours</span>
+                            </div>
+                </div>
+            </div>
+
+            <div class="form-group row">
+                <label for="inputPassword3" class="col-sm-2 col-form-label">Done</label>
+                <div class="col-sm-10">
+                    <select class="form-control selectpicker" data-live-search="true" name="done"
+                        title="Done Percentage" required>
+                        
+                        <%_ for(let i = 0; i <= 10; i++){ -%>
+                        <option value="<%= i * 10 %>">
+                            <%= `${i*10}%` %></option>
+                        <%_ } -%>
+                    </select>
+                </div>
+            </div>
+
+            <%_ if(Issues.length > 0) { -%>
+            <div class="form-group row">
+                <label for="inputIssue" class="col-sm-2 col-form-label">Parent Issue</label>
+                <div class="col-sm-10">
+                    <select class="form-control selectpicker" data-live-search="true" name="parenttask"
+                        title="Choose Parent Issue">
+                        <%_ Issues.forEach(Issue => { -%>
+                        <option value="<%= Issue.issueid %>">
+                            <%= Issue.subject %></option>
+                        <%_ }) -%>
+                    </select>
+                </div>
+            </div>
+            <%_ } -%>
+
+            <div class="form-group row">
+                <label for="profile-img" class="col-sm-2 col-form-label">Files</label>
+                <div class="custom-file col-sm-4 ml-3 ">
+                    <input type="file" class="custom-file-input" id="profile-img" name="uploadFile">
+                    <label class="custom-file-label" for="customFile">Choose file</label>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-sm-3 offset-sm-2">
+                    <img src="" id="profile-img-tag" width="80px" class="mb-2" />
+                </div>
+            </div>
+
+            <div class="form-group row">
+                <div class="col-sm-10">
+                    <button type="submit" class="btn btn-primary">Add Issue</button>
+                </div>
+            </div>
+        </form>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bs-custom-file-input/dist/bs-custom-file-input.min.js"></script>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.js"></script>
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+    <script src="https://unpkg.com/gijgo@1.9.13/js/gijgo.min.js" type="text/javascript"></script>
+    <script type="text/javascript">
+        bsCustomFileInput.init()
+        function readURL(input) {
+            if (input.files && input.files[0]) {
+                var reader = new FileReader();
+
+                reader.onload = function (e) {
+                    $('#profile-img-tag').attr('src', e.target.result);
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+        $("#profile-img").change(function () {
+            readURL(this);
+        });
+        $('#datepicker').datepicker({
+            uiLibrary: 'bootstrap4'
+        });
+        $('#datepicker1').datepicker({
+            uiLibrary: 'bootstrap4'
+        });
+    </script>
+
+    <%_ include ../../partials/footer -%>
