@@ -1,0 +1,50 @@
+<%_ include ../../partials/header -%>
+<link rel="stylesheet" href="/stylesheets/style.css">
+<link rel="stylesheet" href="/stylesheets/sidebar.css">
+</head>
+
+<body>
+  <%_ include ../../partials/navbar -%>
+  <%_ include ../../partials/sidebar -%>
+  <div role="main" class="col-md-9 ml-sm-auto col-lg-10 px-4 " style="margin-top:30px;">
+    <h1>Activity</h1>
+    <hr />
+
+    <%_ if(messages){ -%>
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+      <%= messages %>
+      <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+      </button>
+    </div>
+    <%_ } -%>
+
+    <%_ if(activityData.length > 0) { 
+      -%>
+    <div class="card">
+      <div class="card-body">
+
+        <%_ activityData.forEach((activity) => { -%>
+        <div class="card mb-5">
+
+          <h5 class="card-header"><%= activity.date %>
+            <span class="badge badge-info"><%= activity.data.length %></span></h5>
+          <%_ activity.data.forEach((act) => { -%>
+          <div class="card-body">
+            <div class="btn btn-primary mb-3">
+              <%= `${act["time"]} WIB` %>
+            </div>
+            <h5 class="card-title"><%= act["title"] %></h5>
+            <p class="card-text"><%= act["description"] %></p>
+            <h6 class="card-text"> <%= `Author: ${act["author_name"]}` %></h6>
+          </div>
+          <hr/>
+          <%_ }) -%>
+        </div>
+        <%_ }) -%>
+
+      </div>
+    </div>
+    <%_ } -%>
+  </div>
+  <%_ include ../../partials/footer -%>
