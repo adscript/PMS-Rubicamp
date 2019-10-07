@@ -453,7 +453,7 @@ router.post('/issues/:projectid/edit/:issueid', isLoggedIn, (req, res) => {
   oldData.duedate = moment(oldData.duedate).format('YYYY-MM-DD');
   Data.startdate = moment(Data.startdate, 'MM/DD/YYYY').format('YYYY-MM-DD');
   Data.duedate = moment(Data.duedate, 'MM/DD/YYYY').format('YYYY-MM-DD');
-  
+
   let changedFile = ((req.files) ? req.files.uploadFile.name : '');
   console.log(changedFile);
   if (req.files && changedFile != oldData.filename) {
@@ -480,23 +480,23 @@ router.post('/issues/:projectid/edit/:issueid', isLoggedIn, (req, res) => {
       })
     }).catch(err => console.log(err));
   } else {
-    let count = Project.countAfterAddEdit(pool, projectid,issueid, true);
+    let count = Project.countAfterAddEdit(pool, projectid, issueid, true);
     let editIssue = Project.updateIssues(pool, Data, issueid);
     Promise.all([count, editIssue]).then((results) => {
       let changedData = Object.keys(Data).filter(key => {
         return (Data[key] != oldData[key] && Data[key] != '');
       }).join(', ')
-      if (changedData.length == 0){
+      if (changedData.length == 0) {
         changedData = 'Nothing';
         req.flash('berhasil', `${changedData} changed`);
         res.redirect(`/projects/issues/${projectid}?page=${Math.ceil(results[0].rows[0].count / 3)}`);
       }
-      else if(changedData.length > 0) {
-      Project.addActivity(pool, Data, oldData, projectid, loggedInUser.userid).then(() => {
-        req.flash('berhasil', `${changedData} changed`);
-        res.redirect(`/projects/issues/${projectid}?page=${Math.ceil(results[0].rows[0].count / 3)}`);
-      });
-    }
+      else if (changedData.length > 0) {
+        Project.addActivity(pool, Data, oldData, projectid, loggedInUser.userid).then(() => {
+          req.flash('berhasil', `${changedData} changed`);
+          res.redirect(`/projects/issues/${projectid}?page=${Math.ceil(results[0].rows[0].count / 3)}`);
+        });
+      }
     }).catch(err => res.render('error', { message: err, error: err }));
   }
 })
@@ -505,13 +505,57 @@ router.post('/issues/:projectid/edit/:issueid', isLoggedIn, (req, res) => {
 router.get('/issues/:projectid/delete/:issueid', isLoggedIn, (req, res) => {
   let { projectid, issueid } = req.params;
   let loggedInUser = req.session.user;
-  let count = Project.countAfterAddEdit(pool, projectid,issueid, true);
+  let count = Project.countAfterAddEdit(pool, projectid, issueid, true);
   let deleteIssue = Project.deleteIssue(pool, issueid);
 
   Promise.all([count, deleteIssue]).then(results => {
     req.flash('berhasil', `Issue #${issueid} deleted`);
     res.redirect(`/projects/issues/${projectid}?page=${Math.ceil(results[0].rows[0].count / 3)}`);
   })
+})
+
+router.get('/activity/:projectid', isLoggedIn, (req, res) => {
+  let projectid = req.params.projectid;
+  let loggedInUser = req.session.user;
+  Project.viewActivity(pool, projectid).then(activityList => {
+    if (activityList.rows.length > 0) {
+      activityList = activityList.rows.map(value => {
+        value.date = moment(value.date).format('YYYY-MM-DD');
+        value.time = moment(value.time, 'HH:mm:ss.SSS').format('HH:mm:ss');
+        return value;
+      });
+
+      let allDate = activityList.map(value => value.date);
+      let uniqueDate = allDate.filter((value, index) => allDate.indexOf(value) == index);
+      let activityData = uniqueDate.map(date => {
+        return {
+          date, data: activityList.filter((value) => value.date == date)
+        }
+      })
+      activityData = activityData.map((value) => {
+        if (value.date == moment().format('YYYY-MM-DD'))
+          value.date = 'Today';
+        else if (value.date == moment().subtract(1, 'days').format('YYYY-MM-DD'))
+          value.date = 'Yesterday';
+        return value;
+      })
+
+      res.render('projects/activity', {
+        currentURL: "activity",
+        loggedInUser, projectid, moment, activityData,
+        messages: req.flash('berhasil')[0]
+      })
+    } else {
+      req.flash('berhasil', `Belum ada activity tersedia, silahkan lakukan edit issue untuk menambahkan activity`);
+      let activityData = [];
+      res.render('projects/activity', {
+        currentURL: "activity",
+        loggedInUser, projectid, moment, activityData,
+        messages: req.flash('berhasil')[0]
+      })
+    }
+  })
+
 })
 
 
