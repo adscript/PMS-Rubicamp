@@ -361,6 +361,18 @@ module.exports = class Project {
         let sqlAuthor = `INSERT INTO activity(${Column.join(', ')}) VALUES ($1, $2, $3, $4)`;
         return pool.query(sqlAuthor, [projectid, title, description, author]);
     }
-
+    
+    static viewActivity(pool, projectid){
+        let sqlActivity = `SELECT title, description, 
+        (time AT TIME ZONE 'Asia/Jakarta' AT time zone 'utc')::time as time,
+        (time AT TIME ZONE 'Asia/Jakarta' AT TIME ZONE 'utc')::DATE AS date,
+        "time", 
+        CONCAT(firstname,' ',lastname) as author_name 
+        FROM activity LEFT JOIN users 
+        ON activity.author = users.userid
+        WHERE projectid = $1
+        ORDER BY activity.time DESC`;
+        return pool.query(sqlActivity, [projectid]);
+    }
 
 }
