@@ -365,8 +365,7 @@ module.exports = class Project {
     static viewActivity(pool, projectid){
         let sqlActivity = `SELECT title, description, 
         (time AT TIME ZONE 'Asia/Jakarta' AT time zone 'utc')::time as time,
-        (time AT TIME ZONE 'Asia/Jakarta' AT TIME ZONE 'utc')::DATE AS date,
-        "time", 
+        (time AT TIME ZONE 'Asia/Jakarta' AT TIME ZONE 'utc')::DATE AS date, 
         CONCAT(firstname,' ',lastname) as author_name 
         FROM activity LEFT JOIN users 
         ON activity.author = users.userid
@@ -374,5 +373,24 @@ module.exports = class Project {
         ORDER BY activity.time DESC`;
         return pool.query(sqlActivity, [projectid]);
     }
+    
+    static overviewMember(pool, projectid){
+        let sqlMembersList = `SELECT CONCAT(firstname,' ',lastname) AS fullname FROM members INNER JOIN users USING (userid) WHERE projectid = $1`;
+        return pool.query(sqlMembersList, [projectid]);
+    }
 
+    static overviewIssues(pool, projectid){
+        let sqlIssue = `SELECT tracker,
+        COUNT(CASE WHEN tracker = 'Bug' THEN 1 END) AS totalbug,
+        COUNT(CASE WHEN tracker = 'Feature' THEN 1 END) AS totalfeature,
+        COUNT(CASE WHEN tracker = 'Support' THEN 1 END) AS totalsupport,
+        COUNT(CASE WHEN tracker = 'Bug' AND status != 'Closed' THEN 1 END) AS bug,
+        COUNT(CASE WHEN tracker = 'Feature' AND status != 'Closed' THEN 1 END) AS feature,
+        COUNT(CASE WHEN tracker = 'Support' AND status != 'Closed' THEN 1 END) AS support
+        FROM issues
+        WHERE projectid = $1
+        GROUP BY tracker`
+        return pool.query(sqlIssue, [projectid]);
+    }
+    
 }
