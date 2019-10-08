@@ -163,19 +163,57 @@ router.get('/delete/:projectid', isLoggedIn, isAdmin, (req, res) => {
 
 
 // GET /projects/overview/:projectid
-router.get('/overview:projectid', isLoggedIn, isAdmin, (req, res, next) => {
+router.get('/overview/:projectid', isLoggedIn, isAdmin, (req, res, next) => {
   let projectid = req.params.projectid;
+  let Member = Project.overviewMember(pool, projectid);
+  let Issue = Project.overviewIssues(pool, projectid);
 
-  res.render('projects/overview/index', {
-    currentURL: 'overview',
-    loggedInUser: req.session.user
-  });
+  Promise.all([Member, Issue]).then((results) => {
+    let Members = results[0].rows;
+    let Issues = results[1].rows || [];
+    console.log(Issues);
+    let issueTracker = [{
+      tracker: 'Bug',
+      open: 0,
+      total: 0
+    }, {
+      tracker: 'Feature',
+      open: 0,
+      total: 0
+    }, {
+      tracker: 'Support',
+      open: 0,
+      total: 0
+    }]
 
+    let Bug = Issues.filter(value => { return value.bug > 0; });
+    let Feature = Issues.filter(value => { return value.feature > 0; });
+    let Support = Issues.filter(value => { return value.support > 0; });
+
+    issueTracker.forEach(value => {
+      if(value.tracker == 'Bug' && Bug[0]){
+        value.open = Number(Bug[0].bug);
+        value.total = Number(Bug[0].totalbug);
+      }
+      if(value.tracker == 'Feature' && Feature[0] ){
+        value.open = Number(Feature[0].feature);
+        value.total = Number(Feature[0].totalfeature);
+      }
+      if(value.tracker == 'Support' && Support[0] ){
+        value.open = Number(Support[0].support);
+        value.total = Number(Support[0].totalsupport);
+      }
+    });
+    console.log(issueTracker);
+
+    res.render('projects/overview/index', {
+      currentURL: 'overview',
+      loggedInUser: req.session.user,
+      projectid, Members, Issues, issueTracker,
+      messages: req.flash('berhasil')[0]
+    });
+  })
 });
-
-
-
-// GET /projects/activity/:projectid
 
 // =========================================== GET MEMBERS PAGE ====================================================
 router.get('/members/:projectid', isLoggedIn, (req, res) => {
