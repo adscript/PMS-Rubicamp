@@ -1,0 +1,67 @@
+<%_ include ../../partials/header -%>
+<link rel="stylesheet" href="/stylesheets/style.css">
+<link rel="stylesheet" href="/stylesheets/sidebar.css">
+</head>
+
+<body>
+    <%_ include ../../partials/navbar -%>
+    <%_ include ../../partials/sidebar -%>
+    <div role="main" class="col-md-9 ml-sm-auto col-lg-10 px-4 " style="margin-top:30px;">
+        <h1>Overview</h1>
+        <hr />
+
+        <%_ if(messages){ -%>
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <%= messages %>
+        </div>
+        <%_ } -%>
+
+        <div class="card">
+            <h5 class="card-header">
+                Issue Tracker
+            </h5>
+            <div class="card-body">
+                <div class="card">
+                    <ul class="list-group list-group-flush">
+                        <%_ issueTracker.forEach(item => { -%>
+                        <li class="list-group-item">
+                            <div class="row">
+                                <h6 class="col" style="text-align: left"><%= item.tracker %></h6>
+                                <div style="text-align: right">
+                                    <span class="badge badge-success"><%= item.open %>
+                                        Open</span>
+                                    <span>/</span>
+                                    <span
+                                        class="badge badge-info"><%= item.total %></span>
+                                </div>
+                            </div>
+                        </li>
+                        <%_ }) -%>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="card mt-3">
+            <h5 class="card-header">
+                Member(s);
+            </h5>
+            <div class="card-body">
+                <div class="card">
+                    <ul class="list-group list-group-flush">
+                        <%_ Members.forEach((Member)=>{ -%>
+                        <li class="list-group-item">
+                            <div class="row">
+                                <h6 class="col" style="text-align: left"><%= Member.fullname %></h6>
+                            </div>
+                        </li>
+                        <%_ }) -%>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+
+
+
+    </div>
+    <%_ include ../../partials/footer -%>
