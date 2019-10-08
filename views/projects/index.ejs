@@ -5,13 +5,13 @@
     <% include ../partials/navbar %>
     <div class="px-5" style="margin-top: 80px">
         <%_ if(messages){ -%>
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                <%= messages %>
-                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <%_ } -%>
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <%= messages %>
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+        <%_ } -%>
         <h1>Projects</h1>
         <hr />
         <!-- TAMPILAN FILTERS  -->
@@ -22,45 +22,55 @@
 
         <!-- TAMPILAN TABEL -->
         <div class="table-responsive">
-        <table border="0" class="table table-striped" style="margin-top: 50px;">
-            <thead>
-                <tr>
-                    <%- loggedInUser.projectopt["ID"] ? '<th scope="col">#</th>' : "" %>
-                    <%- loggedInUser.projectopt["Name"] ? '<th scope="col">Name</th>' : "" %>
-                    <%- loggedInUser.projectopt["Members"] ? '<th scope="col">Members</th>' : "" %>
-                    <th scope="col">Action</th>
-                </tr>
-            </thead>
-            <tbody>
-                <%_ projects.forEach((project) => { -%>
-                <tr>
-                    <%- loggedInUser.projectopt["ID"] ? '<td>' + project.projectid + '</td>' : "" %>
-                    <%- loggedInUser.projectopt["Name"] ? '<td>' + project.name + '</td>' : "" %>
-                    <%- loggedInUser.projectopt["Members"] ? '<td>' + project.fullname + '</td>' : "" %>
-                    <td>
-                        <a role="button" class="btn btn-success mr-1" href="<%=`/projects/edit/${project.projectid}`%>">Edit</a>
-                        <%- (loggedInUser.isadmin) ? `<a role="button" class="btn btn-danger" href="/projects/delete/${project.projectid}">Delete</a>` : '' %>
-                    </td>
-                </tr>
-                <%_ }); -%>
-            </tbody>
-        </table>
-        </div>  
+            <table border="0" class="table table-striped" style="margin-top: 50px;">
+                <thead>
+                    <tr>
+                        <%- loggedInUser.projectopt["ID"] ? '<th scope="col">#</th>' : "" %>
+                        <%- loggedInUser.projectopt["Name"] ? '<th scope="col">Name</th>' : "" %>
+                        <%- loggedInUser.projectopt["Members"] ? '<th scope="col">Members</th>' : "" %>
+                        <th scope="col">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <%_ projects.forEach((project) => { -%>
+                    <tr>
+                        <%_ if(loggedInUser.projectopt["ID"]){ -%>
+                        <td>
+                            <a role="button" class="btn btn-info mr-1"
+                                href="<%=`/projects/overview/${project.projectid}`%>"><%=project.projectid%></a>
+                        </td>
+                        <%_ } -%>
+                        <%- loggedInUser.projectopt["Name"] ? '<td>' + project.name + '</td>' : "" %>
+                        <%- loggedInUser.projectopt["Members"] ? '<td>' + project.fullname + '</td>' : "" %>
+                        <td>
+                            <a role="button" class="btn btn-success mr-1"
+                                href="<%=`/projects/edit/${project.projectid}`%>">Edit</a>
+                            <%- (loggedInUser.isadmin) ? `<a role="button" class="btn btn-danger" href="/projects/delete/${project.projectid}">Delete</a>` : '' %>
+                        </td>
+                    </tr>
+                    <%_ }); -%>
+                </tbody>
+            </table>
+        </div>
 
         <!--PAGINATION-->
         <nav aria-label="...">
-                <ul class="pagination">
-                  <li class="page-item <%= (currentPage == 1) ? 'disabled' : '' %>">
-                    <a class="page-link" href="<%= url.includes('?') ? `/projects${url.replace('/?page=' + currentPage,'?page=' + Number(currentPage-1))}` : '/projects?page=' + Number(currentPage-1) %>">Previous</a>
-                  </li>
-                  <% for(let i = (currentPage == 1) ? currentPage : currentPage - 1; i <= totalPage && i <= currentPage + 5; i++){ %>
-                  <li class="page-item <%= (i == currentPage) ? 'active' : '' %>"><a class="page-link" href="<%= url.includes('?') ? `/projects${url.replace('/?page=' + currentPage,'?page=' + i)}` : '/projects?page=' + i %>"><%= i %></a></li>
-                  <% } %>
-                  <li class="page-item <%= (currentPage == totalPage) ? 'disabled' : '' %> ">
-                    <a class="page-link" href="<%= url.includes('?') ? `/projects${url.replace('/?page=' + currentPage,'?page=' + Number(currentPage+1))}` : '/projects?page=' + Number(currentPage+1) %>">Next</a>
-                  </li>
-                </ul>
-              </nav>
+            <ul class="pagination">
+                <li class="page-item <%= (currentPage == 1) ? 'disabled' : '' %>">
+                    <a class="page-link"
+                        href="<%= url.includes('?') ? `/projects${url.replace('/?page=' + currentPage,'?page=' + Number(currentPage-1))}` : '/projects?page=' + Number(currentPage-1) %>">Previous</a>
+                </li>
+                <% for(let i = (currentPage == 1) ? currentPage : currentPage - 1; i <= totalPage && i <= currentPage + 5; i++){ %>
+                <li class="page-item <%= (i == currentPage) ? 'active' : '' %>"><a class="page-link"
+                        href="<%= url.includes('?') ? `/projects${url.replace('/?page=' + currentPage,'?page=' + i)}` : '/projects?page=' + i %>"><%= i %></a>
+                </li>
+                <% } %>
+                <li class="page-item <%= (currentPage == totalPage) ? 'disabled' : '' %> ">
+                    <a class="page-link"
+                        href="<%= url.includes('?') ? `/projects${url.replace('/?page=' + currentPage,'?page=' + Number(currentPage+1))}` : '/projects?page=' + Number(currentPage+1) %>">Next</a>
+                </li>
+            </ul>
+        </nav>
 
         <%- (loggedInUser.isadmin) ? '<a role="button" href="projects/add" class="btn btn-primary">Add</a>' : '' %>
     </div>
