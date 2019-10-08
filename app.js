@@ -5,12 +5,12 @@ const cookieParser = require('cookie-parser');
 const logger = require('morgan');
 const session = require('express-session');
 const flash = require('connect-flash');
+const fileUpload = require('express-fileupload');
 
 const indexRouter = require('./routes/index');
 const usersRouter = require('./routes/users');
 const projectsRouter = require('./routes/projects');
 const profileRouter = require('./routes/profile');
-
 
 const app = express();
 
@@ -22,6 +22,8 @@ app.set('view engine', 'ejs');
 app.use(session({
   secret: 'Adscript Code'
 }))
+
+app.use(fileUpload());
 
 //from express-generator
 app.use(logger('dev'));
